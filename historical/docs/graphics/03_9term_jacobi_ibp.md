@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # 9-Term Jacobi IBP Cancellation on T³ (Explicit Verification)
 
 ```mermaid

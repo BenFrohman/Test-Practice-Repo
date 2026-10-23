@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Auto-Implementation Status - Exhaustive Frohmanian Tether Proof
 
 **Date**: 2026-05-29 (ongoing auto-execution)

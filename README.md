@@ -1,6 +1,7 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # NS_Millennium_Proof — Frohmanian Symplectic Tether Regularity Theorem
 
-**Author:** Benjamin Stanley Frohman (@Investor0x / Bit21)  
+**Author:** Benjamin Stanley Frohman  
 **Date:** 2026
 
 Formalization in Lean 4 of the global regularity for the 3D incompressible Navier–Stokes equations using the Frohmanian Symplectic Tether framework.

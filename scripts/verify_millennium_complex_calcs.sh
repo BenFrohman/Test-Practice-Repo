@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0.
 # verify_millennium_complex_calcs.sh
 #
 # Updated tooling to accompany the full complexity and necessity of the user's materials

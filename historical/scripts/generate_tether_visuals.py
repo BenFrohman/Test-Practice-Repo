@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0.
 """
 Python (stdlib only) generator for 8 unique fully rendered vector graphics
 (SVG format — professional, viewable, scalable "rendered" output as required

@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Section 3 Evolution: A Priori Majorant vs Tether-Forced Corollary
 
 **⚠️ STATUS: PARTIAL / INCOMPLETE**

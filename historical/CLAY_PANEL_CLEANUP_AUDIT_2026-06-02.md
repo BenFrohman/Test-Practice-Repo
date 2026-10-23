@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Clay Panel Cleanup Audit — June 2 2026
 
 **Repository**: `~/lean-projects/NS_Millennium_Proof`  

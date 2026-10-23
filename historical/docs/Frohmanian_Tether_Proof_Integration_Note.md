@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Integration Note — Frohmanian Tether NS Proof (May 31 2026 session)
 
 ## New Reference Document Placed

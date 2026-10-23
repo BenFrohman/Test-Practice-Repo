@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Relationship Between LaTeX Manuscript and Lean 4 Formalization
 
 **Project Title (working):**  

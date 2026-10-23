@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Main8DRAFTAppends — Living Document for Final Refinement
 **Source Document**: main (8).pdf (8-page version, April/May 2026)  
 **Purpose**: Single living file where the original paper content lives, followed by appended blocks of:

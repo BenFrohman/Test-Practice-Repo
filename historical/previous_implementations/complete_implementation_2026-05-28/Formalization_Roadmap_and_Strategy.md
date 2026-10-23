@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Exhaustive Lean 4 Formalization Roadmap for the Frohmanian Symplectic Tether Proof of 3D Navier-Stokes Global Regularity
 
 **Goal**: Produce a complete, machine-checked Lean 4 proof of global smooth solutions for the 3D incompressible Navier-Stokes equations on T³, following the user's audited LaTeX argument with all non-circularity refinements from the PASS audits.

@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Side-by-Side Diff of §3 + Full Chat History (May 10–31, 2026)
 
 [User's exact pasted content from the query goes here verbatim]

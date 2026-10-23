@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Frohmanian Symplectic Tether Theorem – Complete Chat History (May 10–31, 2026)
 ## For VS Code Lean4 Project – Benjamin Stanley Frohman
 

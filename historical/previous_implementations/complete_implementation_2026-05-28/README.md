@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Frohmanian Symplectic Tether — Lean Formalization
 
 **Project**: Formalization of the 3D Navier-Stokes global regularity proof  

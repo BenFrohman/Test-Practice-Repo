@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0.
 """
 generate_laTeX_lean_relationship.py
 

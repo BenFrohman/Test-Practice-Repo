@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Step-by-Step Structure for Theorem 2.3 (Uniqueness of the Minimal Tether)
 
 This document mirrors the structure from the audited LaTeX (PASS 2 / Section 2.7) and shows how it is (or will be) formalized in Lean.

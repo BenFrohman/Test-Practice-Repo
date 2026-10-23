@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Phase 0 and Phase 1 Implementation Plan (Strategic Order)
 
 **Goal for this phase**: Establish all geometric foundations and prove the critical early lemma (degeneracy for the mollified sup-norm proxy) BEFORE any analytic estimates. This is the #1 way to avoid circularity pitfalls.

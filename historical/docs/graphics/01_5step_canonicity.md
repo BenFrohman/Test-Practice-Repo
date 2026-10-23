@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # 5-Step Canonicity of the Frohmanian Symplectic Tether
 
 ```mermaid

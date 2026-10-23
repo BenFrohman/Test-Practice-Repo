@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # 01. 5-Step Canonicity of the Frohmanian Symplectic Tether (SVG Vector Graphic)
 
 **Novelty**: The sequential structural forcing (C1) locality/invariance under the coadjoint action of SDiff(T³) (only |ω|² pointwise survives); (C2) degeneracy with respect to the kinetic-energy Hamiltonian H via the L²-orthogonal projection Π_u; (C3) production of controllable negative quadratic feedback at spatial maxima of |ω| with coefficient forced to κ = C_CZ(3); Step 5 higher-order exclusion (degree ≥4 or non-projected quadratic terms are ruled out by minimality + (C3) controllability and solution-independent C_abs). The unique minimal object is TetherKernel.

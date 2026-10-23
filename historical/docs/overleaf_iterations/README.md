@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Living Proof Methodology — Overleaf Iterations
 
 This directory will contain the historical evolution of the paper **"Proof of Global Smoothness for the 3D Incompressible Navier-Stokes Equations: The Frohmanian Symplectic Tether Theorem"** as it developed on Overleaf.

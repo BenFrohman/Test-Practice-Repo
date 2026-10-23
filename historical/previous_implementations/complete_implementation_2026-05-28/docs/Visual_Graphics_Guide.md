@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Visual Graphics Guide for the Frohmanian Symplectic Tether Theorem (Clay Panel Submission)
 
 **Generated in autonomous Clay Panel loop fire #4 (2026-06-01 15:28 UTC, ~51 min remaining in 3.8h window).**  

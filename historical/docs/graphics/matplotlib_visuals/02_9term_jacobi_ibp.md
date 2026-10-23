@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # 02. 9-Term Jacobi Cyclic Sum — Explicit IBP + Antisymmetric Cancellation (SVG Vector Graphic)
 
 **Novelty**: The explicit 9-term (plus 3 symmetric siblings) expansion of the Jacobiator for the added tether correction B on the reduced coadjoint orbit: terms of the form X · ((Y·∇)Z) etc. after Lie bracket distribution. Full integration by parts on T³ using div X = div Y = div Z = 0 and periodicity; all terms cancel in antisymmetric pairs. The surviving algebraic expression is totally antisymmetric in (X,Y,Z) and vanishes identically. Chevalley–Eilenberg 2-cocycle closure d₂B = 0 follows because |ω|² is Ad-invariant under the coadjoint action of SDiff(T³) on divergence-free fields. This proves the quadratic tether is a natural 2-cocycle, not an arbitrary perturbation — strengthening canonicity.

@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Co-adjoint Orbit Dynamics (SDiff(T³) Action on Divergence-Free Fields)
 
 ```mermaid

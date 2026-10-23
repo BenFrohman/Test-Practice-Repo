@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # NS_Millennium_Proof: Building the Frohmanian Symplectic Tether Proof (Local Copy)
 
 ## Quick Start

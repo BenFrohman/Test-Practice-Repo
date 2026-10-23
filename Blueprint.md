@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Blueprint for the Frohmanian Symplectic Tether Theorem
 
 > **Clay Cleanup Note (2026-06-02)**: Raw chat histories, proof-evolution diffs, and superseded living documents have been moved to `historical/docs/`. This document, `LaTeX_Lean_Relationship.md`, the Lean sources, and the eight canonical visuals are the authoritative referee materials. See `historical/README.md` for the full rationale.
