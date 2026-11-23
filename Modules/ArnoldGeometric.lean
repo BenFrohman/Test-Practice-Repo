@@ -16,7 +16,7 @@ This file is part of the original Frohmanian Symplectic Tether framework for the
 Coadjoint orbit, classical bracket, kinetic energy, and the tether itself.
 -/
 
-import NS_Millennium_Proof.Lean_Formalization_2026_05_28.Modules.NS_Equations
+import NS_Millennium_Proof.Modules.NS_Equations
 
 namespace ArnoldGeometric
 

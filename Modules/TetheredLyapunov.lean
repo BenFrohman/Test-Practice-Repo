@@ -20,7 +20,7 @@ import NS_Millennium_Proof.Modules.SymplecticTether
 
 namespace TetheredLyapunov
 
-open SymplecticTether
+open FrohmanianTether
 
 def ComparisonODE (C κ'' y0 : ℝ) : ℝ → ℝ := sorry
 

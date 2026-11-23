@@ -21,11 +21,11 @@ On any finite interval where a smooth solution exists, constants are finite by s
 The majorant then gives the bound.
 -/
 
-import NS_Millennium_Proof.Lean_Formalization_2026_05_28.Modules.SymplecticTether
+import NS_Millennium_Proof.Modules.SymplecticTether
 
 namespace IndependentMajorant
 
-open SymplecticTether
+open FrohmanianTether
 
 /-- The autonomous comparison ODE (completely decoupled from NS).
     y' = C y² - κ'' y³ , y(0) = M_ε(0)

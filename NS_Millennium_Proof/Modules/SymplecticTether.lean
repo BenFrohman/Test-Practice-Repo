@@ -191,7 +191,7 @@ noncomputable section
 
 This file uses Lean's namespace and section scoping features as described in §6:
 
-- The `namespace SymplecticTether` groups all novel geometric constructions (TetherKernel,
+- The `namespace FrohmanianTether` groups all novel geometric constructions (TetherKernel,
   the 5-step canonicity argument, degeneracy, invariance, and the explicit Jacobi verification
   on test functionals F_p).
 

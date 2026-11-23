@@ -28,10 +28,3 @@ lean_lib NS_Millennium_Proof where
 lean_lib ForMathlib where
   roots := #[`ForMathlib]
   globs := #[.submodules `ForMathlib]
-  -- The library uses Lean's module system (§5 of the Language Reference).
-  -- Individual .lean files are prefixed with `module` and use `public import` / `public meta import`
-  -- to control public API vs private implementation and meta-phase code (widgets, tactics).
-  -- This enables faster incremental builds and clearer separation of the novel geometric core
-  -- (public theorems) from classical black boxes (implementation details).
-set_option linter.unusedVariables false
-set_option linter.unusedVariables false

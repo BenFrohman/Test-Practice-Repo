@@ -25,11 +25,11 @@ import NS_Millennium_Proof.Modules.NS_Equations
 
 namespace GlobalRegularity
 
-open SymplecticTether TetheredLyapunov ArnoldGeometric NavierStokes3D
+open FrohmanianTether TetheredLyapunov ArnoldGeometric NavierStokes3D
 
 /-! ## Main Theorem — Frohmanian Symplectic Tether Theorem -/
 
-theorem frohmanian_symplectic_tether_theorem :
+theorem frohmanian_tether_theorem :
   ∃ (𝔗_F : CoadjointOrbit → Functional → Functional → ℝ),
     -- 1. The incompressible NS equations are exactly the Hamiltonian flow w.r.t. kinetic energy
     --    (reversible part classical by degeneracy; viscosity via metriplectic completion)
