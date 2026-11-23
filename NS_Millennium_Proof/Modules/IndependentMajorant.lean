@@ -49,7 +49,7 @@ theorem le_of_barrier {T A : ℝ} {f f' : ℝ → ℝ} (hf : ∀ t ∈ Ico 0 T, 
     exact image_le_of_deriv_right_lt_deriv_boundary hcont hderiv hstart hB
       (fun x hx hfx => hbar ε hε x ⟨hx.1, hx.2.trans ht.2⟩ hfx) ⟨ht.1, le_rfl⟩
   by_contra h
-  push_neg at h
+  push Not at h
   have h1t : 0 < 1 + t := by linarith [ht.1]
   have hδ : 0 < (f t - A) / 2 := by linarith
   have := key ((f t - A) / 2 / (1 + t)) (div_pos hδ h1t)
@@ -87,7 +87,7 @@ theorem nonneg_of_solution {C κ'' T : ℝ} (hC : 0 < C) (hκ : 0 < κ'') {y y' 
     have : 0 < C * y x ^ 2 - κ'' * y x ^ 3 := by
       have : C * y x ^ 2 - κ'' * y x ^ 3 = y x ^ 2 * (C - κ'' * y x) := by ring
       rw [this]
-      exact mul_pos (by positivity) (by nlinarith)
+      exact mul_pos (by nlinarith) (by nlinarith)
     show -y' x < ε
     linarith [hode x hx]
   intro t ht

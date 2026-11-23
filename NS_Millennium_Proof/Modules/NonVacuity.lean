@@ -31,7 +31,7 @@ theorem continuation_hypotheses_consistent : Hyps (fun _ => True) (fun _ => True
 
 private theorem le_of_forall_lt_le_aux {a T : ℝ} (h : ∀ T' < T, T' ≤ a) : T ≤ a := by
   by_contra hT
-  push_neg at hT
+  push Not at hT
   have := h ((a + T) / 2) (by linarith)
   linarith
 
