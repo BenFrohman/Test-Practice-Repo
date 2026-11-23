@@ -1,6 +1,13 @@
 <!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Relationship Between LaTeX Manuscript and Lean 4 Formalization
 
+> **Status (Nov 23, 2026).** This document predates the restatement of the Lean development.
+> It contains claims (unconditional global regularity, a proved 5-step uniqueness, a proved
+> Jacobi identity) that the Lean code does **not** prove, and the uniqueness claim is refuted in
+> Lean. What is kernel-checked, what is a named hypothesis and what is false is listed in
+> `README.md`, which is authoritative.
+
+
 > **Clay Cleanup Note (2026-06-02)**: Large raw source documents and chat histories have been archived to `historical/docs/`. The mapping in this file, the Lean formalization itself, and the eight canonical visuals now constitute the minimal Clay-auditable submission set. See `historical/README.md`.
 
 **Project Title (working):**  
