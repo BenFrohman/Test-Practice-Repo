@@ -13,18 +13,19 @@ package NS_Millennium_Proof where
     ⟨`relaxedAutoImplicit, false⟩
   ]
 
--- Current stable pin for Clay submission (reproducible, kernel-clean):
+-- Toolchain pin (reproducible):
 -- Lean 4.30.0-rc1 + Mathlib @ v4.30.0-rc1 (official tag).
--- Novel core must remain free of `Lean.trustCompiler`.
 require mathlib from git "https://github.com/leanprover-community/mathlib4.git" @ "v4.30.0-rc1"
 
+-- `globs` replaces `roots` as the build list, so the root module itself must be listed
+-- (`.andSubmodules`); with `.submodules` alone the root file NS_Millennium_Proof.lean and the
+-- ForMathlib library were never built.
 @[default_target]
 lean_lib NS_Millennium_Proof where
   roots := #[`NS_Millennium_Proof]
-  globs := #[.submodules `NS_Millennium_Proof]
+  globs := #[.andSubmodules `NS_Millennium_Proof]
 
--- The file on disk is ForMathlib/NS/Tether.lean. The root used to import
--- NS_Millennium_Proof.ForMathlib.NS.Tether, which is not a path in this tree.
+@[default_target]
 lean_lib ForMathlib where
   roots := #[`ForMathlib]
   globs := #[.submodules `ForMathlib]

@@ -1,9 +1,11 @@
 name: Kernel certificate
 
-# Builds the lake libraries and fails if the built sources contain sorry,
-# admit, native_decide, or an axiom declaration. historical/, docs/, and the
-# top-level Modules/ mirror are not lake roots and are not this certificate.
-# A green run is not a Clay solution.
+# Builds both lake libraries with the pinned toolchain and the Mathlib cache, reads every line
+# of the build log (no sorry, no error, every module built in this run), compiles every other
+# tracked .lean file, scans every tracked .lean file (git ls-files) for sorry / admit /
+# native_decide / axiom, and runs #print axioms (collectAxioms) on every theorem.
+# There is no exclusion list. A green run is not a solution of the Clay problem: the main
+# theorem is conditional on named hypotheses (see README.md).
 
 on:
   push:
@@ -16,37 +18,64 @@ permissions:
 jobs:
   kernel-certificate:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install elan
+      - name: Install elan (toolchain from lean-toolchain)
         run: |
           curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
           echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
 
-      - name: Toolchain
+      - name: No-skip guard (every line of every workflow and CI script)
+        run: python3 scripts/check_no_skips.py
+
+      - name: Toolchain, manifest and revision
         run: |
           mkdir -p cert-out
-          echo "commit: $(git rev-parse HEAD)" | tee cert-out/environment.txt
-          echo "lean-toolchain: $(cat lean-toolchain)" | tee -a cert-out/environment.txt
-          lake --version | tee -a cert-out/environment.txt
-          lean --version | tee -a cert-out/environment.txt
+          {
+            echo "commit: $(git rev-parse HEAD)"
+            echo "lean-toolchain: $(cat lean-toolchain)"
+            echo "elan --version: $(elan --version)"
+            echo "lean --version: $(lean --version)"
+            echo "lake --version: $(lake --version)"
+            echo "date (UTC): $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          } | tee cert-out/environment.txt
+          cp lake-manifest.json cert-out/lake-manifest.json
+          sha256sum lake-manifest.json | tee cert-out/lake-manifest.json.sha256
 
-      - name: Mathlib cache
-        run: lake exe cache get || true
+      - name: Get Mathlib cache (never rebuilds Mathlib from source)
+        run: lake exe cache get
 
       - name: lake build
         run: |
           set -o pipefail
           lake build 2>&1 | tee cert-out/build.log
 
-      - name: sorry / admit / native_decide / axiom scan
+      - name: Full build log scan (every line; no sorry, no error, every module built in this run)
         run: |
           set -o pipefail
-          python3 scripts/sorry_scan.py NS_Millennium_Proof.lean NS_Millennium_Proof ForMathlib | tee cert-out/sorry-scan.txt
+          python3 scripts/check_build_log.py cert-out/build.log | tee cert-out/build-scan.txt
 
-      - name: Upload logs
+      - name: Build every tracked .lean file
+        run: |
+          set -o pipefail
+          python3 scripts/check_lean_coverage.py | tee cert-out/coverage.txt
+
+      - name: sorry / admit / native_decide / axiom scan of every tracked .lean file
+        run: |
+          set -o pipefail
+          git ls-files -z '*.lean' | xargs -0 python3 scripts/sorry_scan.py | tee cert-out/sorry-scan.txt
+
+      - name: '#print axioms (collectAxioms) for every theorem in the built modules'
+        run: |
+          set -o pipefail
+          python3 scripts/gen_audit.py cert-out/KernelCertificateAudit.lean cert-out/modules.txt
+          lake env lean cert-out/KernelCertificateAudit.lean > cert-out/axioms.raw.txt 2>&1 || { cat cert-out/axioms.raw.txt; exit 1; }
+          python3 scripts/check_audit.py cert-out/axioms.raw.txt | tee cert-out/axioms.txt
+
+      - name: Upload certificate files
         if: always()
         uses: actions/upload-artifact@v4
         with:

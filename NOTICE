@@ -1,0 +1,6 @@
+NS_Millennium_Proof (Test-Practice-Repo)
+Copyright (c) 2026 Benjamin Stanley Frohman
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+It depends on Lean 4 and Mathlib (Apache License 2.0), fetched at build time and not
+redistributed here.

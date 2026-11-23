@@ -3,37 +3,20 @@ Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Benjamin Stanley Frohman
 -/
+import NS_Millennium_Proof.Modules.ArnoldGeometric
+
 /-!
-**Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.**
+# Archived snapshot: `Modules/ArnoldGeometric.lean`
 
-**Original Author:** Benjamin Stanley Frohman
+The original text of this file is preserved verbatim in the git history:
 
-This file is part of the original Frohmanian Symplectic Tether framework for the Navier–Stokes Millennium Problem.
+    git show b4001a7:Modules/ArnoldGeometric.lean
+
+(sha256 `642ceffff89aeb465a6ed01f5f30881969eace8494c84f1108938517a8fa5b31`, listed in `historical/ARCHIVED_LEAN_SNAPSHOTS.md`).
+
+That text was never compiled by the kernel-certificate build: it was outside the lake
+libraries, and it contained 5 uses of `sorry`/`axiom` outside comments. It proves nothing and is not part of any claim.
+
+This file now only imports the current, kernel-checked module `NS_Millennium_Proof.Modules.ArnoldGeometric`, so that every
+tracked `.lean` file is compiled with no `sorry` and no custom axiom.
 -/
-/-!
-# Phase 0.2 + 1.1: Geometric Setup and Tether Construction
-
-Coadjoint orbit, classical bracket, kinetic energy, and the tether itself.
--/
-
-import NS_Millennium_Proof.Modules.NS_Equations
-
-namespace ArnoldGeometric
-
-open NavierStokes3D
-
-def CoadjointOrbit : Type := {ω : VorticityField | True}
-
-def CoadjointAction (g : T3 ≃ₘ T3) (ω : CoadjointOrbit) : CoadjointOrbit := sorry
-
-def FunctionalDerivative (F : CoadjointOrbit → ℝ) (ω : CoadjointOrbit) : VelocityField := sorry
-
-def ClassicalBracket (F G : CoadjointOrbit → ℝ) (ω : CoadjointOrbit) : ℝ := sorry
-
-def KineticEnergyHamiltonian (ω : CoadjointOrbit) : ℝ := sorry
-
-def BiotSavart (ω : VorticityField) : VelocityField := sorry
-
-def velocity_from_vorticity (ω : CoadjointOrbit) : VelocityField := BiotSavart ω.val
-
-end ArnoldGeometric

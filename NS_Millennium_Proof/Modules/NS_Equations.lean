@@ -3,216 +3,172 @@ Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Benjamin Stanley Frohman
 -/
-module
-
-public import Mathlib.MeasureTheory.Measure.MeasureSpace
-public import Mathlib.Analysis.InnerProductSpace.PiL2
-public import Mathlib.Analysis.Calculus.ContDiff.Basic
-public import Mathlib.Analysis.Calculus.Deriv.Basic
-public import Mathlib.Analysis.SpecialFunctions.Exp
-public import Mathlib.Data.Real.Basic
-public import Mathlib.Data.ENNReal.Basic
-public import Mathlib.Data.Set.Basic
-public import Mathlib.MeasureTheory.Integral.Bochner.Basic
-public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
-
-open ENNReal  -- brings ⊤ into scope for ENNReal comparisons (needed for integral < ⊤)
-
--- NOTE (post-bumper-rails phase): All silencing options removed. Every `declaration uses 'sorry'`
--- warning is now visible. See the long explanatory comment in TetheredLyapunov.lean for the
--- distinction between "classical black-box identities" (the great majority of warnings here)
--- and "novel geometry gaps that are still being cracked".
+import Mathlib.Analysis.InnerProductSpace.PiL2
+import Mathlib.Analysis.Calculus.ContDiff.Basic
+import Mathlib.Analysis.Calculus.Deriv.Basic
+import Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace
+import Mathlib.MeasureTheory.Integral.Bochner.Basic
 
 /-!
-# Navier-Stokes Equations: Classical Foundation (Black-Box Version)
+# The 3D incompressible Navier–Stokes equations on the torus `𝕋³`
 
-This file sets up the classical 3D incompressible Navier–Stokes equations
-on the torus (periodic boundary conditions), **using the exact forms supplied for Sections 1–2.1**.
+Every object in this file is a genuine definition built from Mathlib (`fderiv`, `HasDerivAt`,
+`ContDiff`, Lebesgue measure). Nothing here is assumed or left unproved.
 
-These equations on \(\mathbb{T}^3\) are treated as the observed dynamics on the coadjoint orbit
-of the group of volume-preserving diffeomorphisms \(\mathrm{SDiff}(\mathbb{T}^3)\), following
-Arnold's geometric hydrodynamics. The vorticity transport equation (derived by taking the curl
-of the original velocity-form PDE) is the concrete dynamics that any admissible Hamiltonian
-structure on this coadjoint orbit must reproduce exactly.
+* The torus `𝕋³ = ℝ³ / ℤ³` is represented by its universal cover `T3 = ℝ³`
+  (`EuclideanSpace ℝ (Fin 3)`): a field on `𝕋³` is a `ℤ³`-periodic field on `T3`
+  (`IsPeriodic`). Integrals over `𝕋³` are integrals over the unit cell `[0, 1)³`
+  (`torusVolume`).
+* `div u`, `curl u`, `Δ u` (`laplacian`), `∇ p` (`gradient`) and `(u · ∇) v` (`convective`) are
+  the classical operators, defined from the Fréchet derivative `fderiv ℝ`.
+* `IsClassicalSolutionOn ν u p T` says that `(u, p)` is a classical solution of
+  `∂ₜu + (u · ∇)u + ∇p = ν Δu`, `div u = 0` on `[0, T)`, smooth and periodic in space.
 
-The transition from the classical PDE on the torus to the coadjoint orbit picture (the natural
-phase space for the ideal Euler equations) is made explicit in the companion geometric module
-ArnoldGeometric.lean, which introduces the classical Lie–Poisson bracket on that orbit.
+The three classical theorems used later are **not** proved here. They are stated as named
+hypotheses (`Prop`s) and passed explicitly as arguments wherever they are used:
 
-All differential operators (div, curl, material derivative, the PDE itself, vorticity transport,
-and local existence) are treated as standard classical objects from vector calculus and parabolic
-theory. The primary NS equation and vorticity transport are the explicit versions from the user query.
-
-These are **black boxes** in the precise sense required for a Clay-level
-formalization of the novel Frohmanian Symplectic Tether Theorem (see the
-authoritative paper "Global Regularity for the 3D Incompressible Navier–Stokes
-Equations via the Frohmanian Symplectic Tether", May 2026 version):
-
-- Their concrete realizations (via Biot-Savart, Calderón–Zygmund singular
-  integrals, etc.) are taken from the classical literature (Leray 1934,
-  Kato 1972, Beale–Kato–Majda 1984, Stein 1993, etc.).
-- The properties we use are explicitly listed in comments below.
-- None of these properties depend on the global regularity result we are proving
-  via the Frohmanian Symplectic Tether.
-- The novel geometric construction (the Frohmanian Tether, the 5-step uniqueness,
-  the tethered Lyapunov + independent majorant, and the non-circular continuation
-  argument) lives in later files and does not presuppose this conclusion.
-
-See the authoritative source documents for the precise classical justifications.
+* `KatoLocalExistence ν` (Kato 1972; Leray 1934),
+* `ClassicalUniqueness ν` (uniqueness of classical solutions),
+* `BealeKatoMajdaContinuation ν` (Beale–Kato–Majda 1984, in the sup-norm form).
 -/
+
+open MeasureTheory Set
+open scoped RealInnerProductSpace
 
 namespace NavierStokes3D
 
-/-! ## Core Types (must be declared first) -/
+/-- The universal cover `ℝ³` of the torus `𝕋³ = ℝ³/ℤ³`. -/
+abbrev T3 : Type := EuclideanSpace ℝ (Fin 3)
 
-/-- The 3-dimensional torus T³ as a Euclidean space. -/
-@[expose] public def T3 : Type := EuclideanSpace ℝ (Fin 3)
-
-/-- Measurable space instance for T³ (from function space). -/
-@[expose] public noncomputable instance : MeasurableSpace T3 := sorry
-
-/-- Normed space instance for T³. -/
-@[expose] public instance : NormedAddCommGroup T3 := sorry
-
-@[expose] public instance : NormedSpace ℝ T3 := sorry
-
-public abbrev VelocityField := T3 → (EuclideanSpace ℝ (Fin 3))
-public abbrev VorticityField := T3 → (EuclideanSpace ℝ (Fin 3))
-public abbrev PressureField := T3 → ℝ
-
-public abbrev TimeDependentVelocity := ℝ → VelocityField
-public abbrev TimeDependentVorticity := ℝ → VorticityField
-public abbrev TimeDependentPressure := ℝ → (T3 → ℝ)
-
-/-! ## Classical Black-Box Infrastructure -/
+abbrev VelocityField := T3 → EuclideanSpace ℝ (Fin 3)
+abbrev VorticityField := T3 → EuclideanSpace ℝ (Fin 3)
+abbrev PressureField := T3 → ℝ
+abbrev TimeDependentVelocity := ℝ → VelocityField
+abbrev TimeDependentVorticity := ℝ → VorticityField
+abbrev TimeDependentPressure := ℝ → PressureField
 
 noncomputable section
-open MeasureTheory
 
-/-- Lebesgue (Haar) measure on the 3-torus T³. Classical, translation-invariant. -/
-public def volume : Measure T3 := sorry
+/-- The standard basis vector `eᵢ` of `ℝ³`. -/
+def e (i : Fin 3) : T3 := EuclideanSpace.single i 1
 
-/-- Pointwise time derivative for time-dependent fields (polymorphic in the spatial codomain). Classical. -/
-public def time_deriv {α : Type} (f : ℝ → (T3 → α)) (t : ℝ) (x : T3) : α := sorry
+/-- `f` is `ℤ³`-periodic, i.e. `f` is a function on the torus `𝕋³`. -/
+def IsPeriodic {α : Type*} (f : T3 → α) : Prop :=
+  ∀ (x : T3) (k : Fin 3 → ℤ), f (x + ∑ i, (k i : ℝ) • e i) = f x
 
-/-! ## Section 1–2.1 Notation (user-supplied style) -/
+/-- The unit cell `[0, 1)³`, a fundamental domain of `ℤ³` acting on `ℝ³`. -/
+def cell : Set T3 := {x | ∀ i, x i ∈ Ico (0 : ℝ) 1}
 
-notation "∂t " f:arg t:arg => time_deriv f t
+/-- Lebesgue measure on the unit cell: integration over `𝕋³`. -/
+def torusVolume : Measure T3 := volume.restrict cell
 
-/-- Convective derivative operator (field-level, black-box). -/
-public def convective (u v : VelocityField) : VelocityField :=
-  fun x => sorry
+/-- The partial derivative `∂ᵢ f = Df(x) eᵢ`. -/
+def partialDeriv {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
+    (i : Fin 3) (f : T3 → F) (x : T3) : F :=
+  fderiv ℝ f x (e i)
 
-/-- Notation for convective derivative. Use prefix form to avoid parsing issues. -/
-prefix:100 "(·∇)" => fun u v => convective u v
+/-- `div u = ∑ᵢ ∂ᵢ uᵢ`. -/
+def div (u : VelocityField) (x : T3) : ℝ := ∑ i, (partialDeriv i u x) i
 
-/-- Laplacian on vector fields (field-level, black-box). -/
-public def laplacian (f : VelocityField) : VelocityField := fun x => sorry
+/-- `curl u = (∂₂u₃ - ∂₃u₂, ∂₃u₁ - ∂₁u₃, ∂₁u₂ - ∂₂u₁)` (indices `0, 1, 2` in Lean). -/
+def curl (u : VelocityField) (x : T3) : EuclideanSpace ℝ (Fin 3) :=
+  ((partialDeriv 1 u x) 2 - (partialDeriv 2 u x) 1) • e 0 +
+  ((partialDeriv 2 u x) 0 - (partialDeriv 0 u x) 2) • e 1 +
+  ((partialDeriv 0 u x) 1 - (partialDeriv 1 u x) 0) • e 2
 
-notation "Δ " f:arg => laplacian f
+/-- The vector Laplacian `Δu = ∑ᵢ ∂ᵢ∂ᵢ u`. -/
+def laplacian (u : VelocityField) (x : T3) : EuclideanSpace ℝ (Fin 3) :=
+  ∑ i, partialDeriv i (partialDeriv i u) x
 
-/-! ## Exact classical forms from user (Sections 1–2.1) -/
+/-- The pressure gradient `∇p = ∑ᵢ (∂ᵢ p) eᵢ`. -/
+def gradient (p : PressureField) (x : T3) : EuclideanSpace ℝ (Fin 3) :=
+  ∑ i, partialDeriv i p x • e i
 
-public abbrev Velocity := VelocityField      -- single-time field (for local statements)
-public abbrev Vorticity := VorticityField
-public abbrev vol := volume                  -- for the user's presentation
+/-- The convective derivative `(u · ∇) v = Dv(x) u(x)`. -/
+def convective (u v : VelocityField) (x : T3) : EuclideanSpace ℝ (Fin 3) :=
+  fderiv ℝ v x (u x)
 
-/-- Divergence operator (declared early to support notations). -/
-public def div (u : VelocityField) (x : T3) : ℝ := sorry
+/-- The vorticity `ω = curl u`. -/
+def vorticity (u : VelocityField) : VorticityField := curl u
 
-/-- Curl operator in 3D (declared early to support notations). -/
-public def curl (u : VelocityField) (x : T3) : (EuclideanSpace ℝ (Fin 3)) := sorry
+/-- Admissible initial data: `u₀` smooth, divergence-free and periodic. -/
+def IsAdmissibleData (u₀ : VelocityField) : Prop :=
+  ContDiff ℝ ⊤ u₀ ∧ (∀ x, div u₀ x = 0) ∧ IsPeriodic u₀
 
-/-- Notation for divergence. -/
-postfix:90 "_div" => fun u x => div u x
+/-- `(u, p)` is a classical solution of the incompressible Navier–Stokes equations with
+viscosity `ν` on the time interval `[0, T)`:
+* for `t ∈ [0, T)`, `u(t)` is smooth, periodic and divergence-free;
+* for `t ∈ (0, T)` and every `x`, `∂ₜ u(t, x) = ν Δu - (u · ∇)u - ∇p` (a genuine derivative);
+* `u(t, x) → u(0, x)` as `t → 0⁺`. -/
+def IsClassicalSolutionOn (ν : ℝ) (u : TimeDependentVelocity) (p : TimeDependentPressure)
+    (T : ℝ) : Prop :=
+  (∀ t ∈ Ico 0 T, ContDiff ℝ ⊤ (u t) ∧ IsPeriodic (u t) ∧ ∀ x, div (u t) x = 0) ∧
+  (∀ t ∈ Ioo 0 T, ∀ x, HasDerivAt (fun s => u s x)
+      (ν • laplacian (u t) x - convective (u t) (u t) x - gradient (p t) x) t) ∧
+  (∀ x, ContinuousWithinAt (fun s => u s x) (Ico 0 T) 0)
 
-/-- The incompressible Navier–Stokes equations (exact classical form, as supplied).
+/-- The vorticity of `u` stays bounded on `[0, T)`: `sup_{t < T} ‖ω(t)‖_{L^∞} < ∞`. -/
+def VorticityBoundedOn (u : TimeDependentVelocity) (T : ℝ) : Prop :=
+  ∃ M : ℝ, ∀ t ∈ Ico 0 T, ∀ x, ‖vorticity (u t) x‖ ≤ M
 
-Mathematical presentation (Sections 1–2.1, verbatim from user):
-  ∀ t ≥ 0,
-    ∂t u t + (u t · ∇) (u t) + ∇ p t = ν Δ (u t) ∧
-    ∇ · (u t) = 0
+/-! ## Named classical hypotheses (not proved in this repository) -/
 
-All differential operators on the left-hand side are classical (black-box).
--/
-public def navier_stokes_eq (u : TimeDependentVelocity) (_p : TimeDependentPressure) (_ν : ℝ) : Prop :=
-  -- Exact mathematical form supplied for Sections 1–2.1.
-  -- The full differential expression (momentum + divergence-free) is treated as classical.
-  ∀ t ≥ 0, (True ∧ ∀ x, div (u t) x = 0)
+/-- **(KL) Kato–Leray local existence.** Every admissible initial datum has a classical solution
+on some interval `[0, T)` with `T > 0`. -/
+def KatoLocalExistence (ν : ℝ) : Prop :=
+  ∀ u₀ : VelocityField, IsAdmissibleData u₀ →
+    ∃ T > 0, ∃ (u : TimeDependentVelocity) (p : TimeDependentPressure),
+      u 0 = u₀ ∧ IsClassicalSolutionOn ν u p T
 
-/-- Vorticity ω = curl u (as supplied; single-time field version). -/
-public def vorticity (u : Velocity) : Vorticity := fun x => curl u x
+/-- **(U) Uniqueness of classical solutions.** Two classical solutions with the same initial
+velocity agree on their common interval of existence. -/
+def ClassicalUniqueness (ν : ℝ) : Prop :=
+  ∀ (u v : TimeDependentVelocity) (p q : TimeDependentPressure) (T₁ T₂ : ℝ),
+    IsClassicalSolutionOn ν u p T₁ → IsClassicalSolutionOn ν v q T₂ → u 0 = v 0 →
+      ∀ t, 0 ≤ t → t < T₁ → t < T₂ → u t = v t
 
-/-- Vorticity transport equation (exact statement as supplied in user query for Sections 1–2.1).
+/-- **(BKM) Beale–Kato–Majda continuation**, sup-norm form: a classical solution on `[0, T)`
+whose vorticity stays bounded extends to a classical solution on a longer interval. -/
+def BealeKatoMajdaContinuation (ν : ℝ) : Prop :=
+  ∀ (u₀ : VelocityField), IsAdmissibleData u₀ → ∀ T > 0,
+    ∀ (u : TimeDependentVelocity) (p : TimeDependentPressure),
+      u 0 = u₀ → IsClassicalSolutionOn ν u p T → VorticityBoundedOn u T →
+        ∃ T' > T, ∃ (v : TimeDependentVelocity) (q : TimeDependentPressure),
+          v 0 = u₀ ∧ IsClassicalSolutionOn ν v q T'
 
-  ∂t ω + (u · ∇) ω = (ω · ∇) u + ν Δ ω
+/-! ## Proved facts -/
 
-Direct derivation from taking curl of the NS momentum equation (vector calculus identities + div u = 0).
-This identity is classical and is treated as a black box here so that the novel geometric
-argument (Frohmanian Symplectic Tether + 5-step uniqueness) can be isolated cleanly.
--/
-public theorem vorticity_transport (u : TimeDependentVelocity) (_p : TimeDependentPressure) (_ν : ℝ)
-    (h_NS : navier_stokes_eq u _p _ν) :
-  -- Exact mathematical statement supplied by the user (Sections 1–2.1):
-  --   ∂t ω + (u · ∇) ω = (ω · ∇) u + ν Δ ω
-  -- where ω = vorticity u.
-  -- Treated as a classical black box (direct consequence of taking curl of the momentum equation).
-  True := by
-  sorry
+theorem IsClassicalSolutionOn.mono {ν : ℝ} {u : TimeDependentVelocity}
+    {p : TimeDependentPressure} {T T' : ℝ} (h : IsClassicalSolutionOn ν u p T) (hT : T' ≤ T) :
+    IsClassicalSolutionOn ν u p T' := by
+  obtain ⟨h1, h2, h3⟩ := h
+  refine ⟨fun t ht => h1 t ⟨ht.1, ht.2.trans_le hT⟩,
+    fun t ht => h2 t ⟨ht.1, ht.2.trans_le hT⟩,
+    fun x => (h3 x).mono (Ico_subset_Ico_right hT)⟩
 
--- div and curl are already declared earlier (to support notations and early definitions).
+@[simp] theorem partialDeriv_zero {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
+    (i : Fin 3) (x : T3) : partialDeriv i (fun _ : T3 => (0 : F)) x = 0 := by
+  simp [partialDeriv]
 
-/-- The incompressible Navier–Stokes PDE in the standard form.
+/-- Sanity check that the solution notion is satisfiable: `u = 0`, `p = 0` is a classical
+solution on every interval, for every `ν`. -/
+theorem zero_isClassicalSolutionOn (ν T : ℝ) :
+    IsClassicalSolutionOn ν (fun _ _ => 0) (fun _ _ => 0) T := by
+  refine ⟨fun t _ => ⟨contDiff_const, fun _ _ => rfl, fun x => by simp [div]⟩,
+    fun t _ x => ?_, fun x => continuousWithinAt_const⟩
+  have hlap : laplacian (fun _ : T3 => (0 : EuclideanSpace ℝ (Fin 3))) x = 0 := by
+    simp only [laplacian]
+    refine Finset.sum_eq_zero fun i _ => ?_
+    have : partialDeriv i (fun _ : T3 => (0 : EuclideanSpace ℝ (Fin 3))) =
+        fun _ => (0 : EuclideanSpace ℝ (Fin 3)) := by
+      funext y; simp
+    rw [this]; simp
+  have hconv : convective (fun _ : T3 => (0 : EuclideanSpace ℝ (Fin 3)))
+      (fun _ => 0) x = 0 := by simp [convective]
+  have hgrad : gradient (fun _ : T3 => (0 : ℝ)) x = 0 := by simp [gradient]
+  rw [hlap, hconv, hgrad]
+  simpa using hasDerivAt_const t (0 : EuclideanSpace ℝ (Fin 3))
 
-This is the observed equation whose vorticity form is the starting point for the geometric construction.
-The pressure is understood to be recovered via the Leray projector (which is compatible with the divergence-free constraint).
--/
-public def NS_PDE (u : ℝ → VelocityField) (_p : ℝ → PressureField) (_ν : ℝ) : Prop :=
-  -- Momentum equation (as black box) + divergence-free constraint
-  (∀ (_t : ℝ) (_x : T3), (True : Prop)) ∧
-  (∀ (t : ℝ) (x : T3), div (u t) x = 0)
-
-/-- Vorticity transport equation (formal identity).
-The right-hand side uses classical operators (black box).
--/
-public theorem vorticity_transport_equation
-    (u : ℝ → VelocityField) (_p : ℝ → PressureField) (_ν : ℝ)
-    (h_ns : NS_PDE u _p _ν) :
-  let ω := fun t x => curl (u t) x
-  ∀ (t : ℝ) (x : T3), (True : Prop) := by
-  sorry
-
-/-- Material derivative (classical black box). -/
-public def MaterialDerivative (u : ℝ → VelocityField) (f : ℝ → (T3 → ℝ)) (t : ℝ) (x : T3) : ℝ := sorry
-
-/-- Local existence of smooth solutions on a short time interval.
-
-This is a standard, well-established result from the parabolic theory of the incompressible Navier–Stokes equations
-(Leray 1934, Kato 1972, and subsequent works). It holds for smooth, divergence-free initial data on T³
-(or R³ with suitable decay) and produces a unique smooth solution on [0, T*) for some T* > 0 depending on the data.
-
- Crucially, this result does **not** assume or imply global regularity; T* may be finite.
-The global regularity result in this formalization is obtained later via the Frohmanian Tether and does not rely on
-this local existence being global a priori.
--/
-public theorem local_existence
-    (u₀ : VelocityField) (ν : ℝ)
-    (h_smooth : ContDiff ℝ ⊤ u₀)
-    (h_divfree : ∀ x, div u₀ x = 0)
-    (h_finite : True)  -- weakened for this old mathlib pin
-    : ∃ T, T > 0 ∧
-        ∃ u : ℝ → VelocityField,
-          (∀ t ∈ Set.Icc 0 T, ContDiff ℝ ⊤ (u t)) ∧
-          u 0 = u₀ ∧
-          ∃ p : ℝ → PressureField, NS_PDE u p ν := by
-  -- Standard result from the classical local well-posedness theory for 3D incompressible NS.
-  -- See the authoritative source documents for references (Leray, Kato, etc.).
-  sorry
-
-where
-  /-- Maximal existence time (black-box classical). This is the T* from the local existence theory. -/
-  Tstar (u₀ : VelocityField) (ν : ℝ) : ℝ := sorry
-
-end   -- close noncomputable section for classical black boxes
+end
 
 end NavierStokes3D

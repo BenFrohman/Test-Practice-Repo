@@ -3,47 +3,20 @@ Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Benjamin Stanley Frohman
 -/
-/-!
-**Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.**
-
-**Original Author:** Benjamin Stanley Frohman
-
-This file is part of the original Frohmanian Symplectic Tether framework for the Navier–Stokes Millennium Problem.
--/
-/-!
-# Phase 2 (continued): Mollified Lyapunov, Differential Inequality, and Full Regularity
-
-Direct translation of Section 3 + all PASS refinements from the living document.
-All steps justified using only previously established geometric properties and the independent majorant.
--/
-
 import NS_Millennium_Proof.Modules.IndependentMajorant
 
-namespace AnalyticEstimates
+/-!
+# Archived snapshot: `Modules/AnalyticEstimates.lean`
 
-open IndependentMajorant FrohmanianTether
+The original text of this file is preserved verbatim in the git history:
 
--- Mollifier, auxiliary field, S_ε, differential inequality derivation
--- (full details with all cancellations, Hölder, Sobolev, Young absorption exactly as in the living document)
-def MollifiedVorticity (ω : ℝ → VorticityField) (ε t : ℝ) : VorticityField := sorry
-def EnstrophyAccumulationField : Type := sorry
+    git show b4001a7:Modules/AnalyticEstimates.lean
 
-def TetheredLyapunovFunctional (ω : ℝ → VorticityField) (ε t : ℝ) : ℝ := sorry
+(sha256 `b39c85c9a518967ae7449bb9e8d9c7b3d7e6903dcd8bb01f92d0f8f812fa2958`, listed in `historical/ARCHIVED_LEAN_SNAPSHOTS.md`).
 
-theorem differential_inequality_for_S_epsilon : True := by
-  -- All transport terms cancel by periodicity + div u = 0.
-  -- Viscous term ≤ 0.
-  -- Stretching bounded by C_CZ M² (from earlier geometric/CZ properties).
-  -- Absorption using the quartic weight justified by uniqueness theorem.
-  -- Result: dS/dt ≤ C_abs (1 + M³ ||φ||^{3/2}) - κ' ∫ |ω_ε|^6
-  sorry
+That text was never compiled by the kernel-certificate build: it was outside the lake
+libraries, and it contained 5 uses of `sorry`/`axiom` outside comments. It proves nothing and is not part of any claim.
 
--- Then apply the independent majorant + Lemma 3.1
-theorem global_regularity_from_independent_majorant : True := by
-  -- On any [0,T] < T*, constants finite by smoothness.
-  -- Majorant gives bound.
-  -- BKM + parabolic regularity.
-  -- Exactly the structure from PASS 5 in the living document.
-  sorry
-
-end AnalyticEstimates
+This file now only imports the current, kernel-checked module `NS_Millennium_Proof.Modules.IndependentMajorant`, so that every
+tracked `.lean` file is compiled with no `sorry` and no custom axiom.
+-/

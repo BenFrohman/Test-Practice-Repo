@@ -4,32 +4,18 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Benjamin Stanley Frohman
 -/
 /-!
-# Data Structures for the Formalization (Array vs List)
+# Archived snapshot: `historical/previous_implementations/complete_implementation_2026-05-28/Modules/DataStructures.lean`
 
-From Lean core:
-- `Array α` is a dynamic array with special runtime support.
-- For proofs, `Array α` is equivalent to `List α` (wrapper).
-- Performance: Best when unshared (destructive updates).
-- In this proof: Use `Array` for discretized fields on T³ (vorticity, velocity) for efficient computation in the implementation view.
-- For mathematical proofs: View as `List` or use `Array.toList` / equivalence lemmas.
+The original text of this file is preserved verbatim in the git history:
 
-Recommendation for this NS formalization:
-- Represent vorticity fields as `Array (Array (Array ℝ³))` or flattened `Array ℝ³` indexed by 3D coords (for performance in potential simulations or Galerkin).
-- Prove equivalence to functional `T3 → ℝ³` representation used in the abstract geometric parts.
-- This bridges the continuous math (from the LaTeX) to discrete computation if needed for verification.
+    git show b4001a7:historical/previous_implementations/complete_implementation_2026-05-28/Modules/DataStructures.lean
 
-Example:
-def FieldArray : Type := Array ℝ³   -- flattened for T³ grid
--- Equivalence theorems to the functional view in ArnoldGeometric etc.
+(sha256 `0dc47cc89994bcb4187c318b048ef784b5c1f6e35f71f4e5836ac2cfcda85b38`, listed in `historical/ARCHIVED_LEAN_SNAPSHOTS.md`).
+
+That text was never compiled by the kernel-certificate build: it was outside the lake
+libraries, and it contained 1 uses of `sorry`/`axiom` outside comments. It proves nothing and is not part of any claim.
+
+This file now contains only this note, so that every tracked `.lean` file is compiled with
+no `sorry` and no custom axiom. The kernel-checked development is the `NS_Millennium_Proof`
+library; see `README.md`.
 -/
-import Mathlib.Data.Array.Basic
-
-namespace DataStructures
-
--- Placeholder for field representation using Array (for efficiency)
-abbrev VorticityArray := Array (Fin 3 → ℝ)  -- or more structured
-
--- Proof-relevant: Array as List wrapper
-theorem array_as_list_equiv (α : Type) : Array α ≃ List α := sorry  -- Use mathlib equivalences when available
-
-end DataStructures

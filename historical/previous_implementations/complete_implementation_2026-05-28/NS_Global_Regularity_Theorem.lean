@@ -4,30 +4,18 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Benjamin Stanley Frohman
 -/
 /-!
-# Complete Assembled Proof of Global Regularity (Exhaustive Structure)
+# Archived snapshot: `historical/previous_implementations/complete_implementation_2026-05-28/NS_Global_Regularity_Theorem.lean`
 
-All dependencies follow the strict non-circular order from the roadmap.
+The original text of this file is preserved verbatim in the git history:
+
+    git show b4001a7:historical/previous_implementations/complete_implementation_2026-05-28/NS_Global_Regularity_Theorem.lean
+
+(sha256 `1650e289dad817d42934c3a5b83475b635b6766131896e658fecb60a918543ee`, listed in `historical/ARCHIVED_LEAN_SNAPSHOTS.md`).
+
+That text was never compiled by the kernel-certificate build: it was outside the lake
+libraries, it imported modules that do not exist in this tree. It proves nothing and is not part of any claim.
+
+This file now contains only this note, so that every tracked `.lean` file is compiled with
+no `sorry` and no custom axiom. The kernel-checked development is the `NS_Millennium_Proof`
+library; see `README.md`.
 -/
-
-import NS_Millennium_Proof.Lean_Formalization_2026_05_28.Modules.NS_Equations
-import NS_Millennium_Proof.Lean_Formalization_2026_05_28.Modules.ArnoldGeometric
-import NS_Millennium_Proof.Lean_Formalization_2026_05_28.Modules.SymplecticTether
-import NS_Millennium_Proof.Lean_Formalization_2026_05_28.Modules.IndependentMajorant
-import NS_Millennium_Proof.Lean_Formalization_2026_05_28.Modules.AnalyticEstimates
-
-namespace GlobalRegularity
-
-theorem global_smooth_solutions_for_3D_incompressible_NS
-    (u₀ : NavierStokes3D.VelocityField) (ν : ℝ)
-    (h_divfree : ∀ x, NavierStokes3D.div u₀ x = 0)
-    (h_smooth : ContDiff ℝ ∞ u₀)
-    (h_energy : ∫ x, ‖u₀ x‖^2 ∂(volume) < ⊤)
-    (h_nu : ν > 0) :
-  ∃ u p, NavierStokes3D.NS_PDE u p ν ∧ u 0 = u₀ ∧ ∀ t ≥ 0, ContDiff ℝ ∞ (u t) := by
-  -- Phase 0: Local existence
-  -- Phase 1: Geometric tether + early degeneracy for proxy + uniqueness (C1-C3 + 5 steps)
-  -- Phase 2: Estimates + independent majorant + corrected Lemma 3.1 + BKM + regularity
-  -- (All in strict order per the living document audits)
-  exact AnalyticEstimates.global_regularity_from_independent_majorant
-
-end GlobalRegularity

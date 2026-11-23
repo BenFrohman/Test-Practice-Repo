@@ -3,25 +3,19 @@ Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Benjamin Stanley Frohman
 -/
-module
-
-public import NS_Millennium_Proof.Modules.SymplecticTether
+import NS_Millennium_Proof.Modules.SymplecticTether
 
 /-!
-# Central Definitions / Naming for the Frohmanian Tether (Canonical)
+# Canonical short name for the tethered bracket
 
-**Original Author:** Benjamin Stanley Frohman  
-**Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.**
-
-Core object: `FrohmanianTether` / 𝔉𝕋  
-Main theorem: `frohmanian_tether_theorem`
+`FT S κ F G ω` is the tethered bracket `{F, G}_κ(ω) = {F, G}(ω) + B_κ(ω; F, G)` of
+`SymplecticTether.lean` (notation `𝔉𝕋`). The proved facts about it are listed in
+`GlobalRegularity.frohmanian_tether_theorem_conditional` and `Uniqueness.lean`.
 -/
 
 namespace FrohmanianTether
 
-public noncomputable abbrev FT := TetheredBracket
-
-notation "𝔉𝕋" => FT
-notation "FT" => FT
+/-- `FT = TetheredBracket`. -/
+noncomputable abbrev FT := TetheredBracket
 
 end FrohmanianTether
