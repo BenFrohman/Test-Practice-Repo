@@ -65,7 +65,8 @@ theorem glue {ν T : ℝ} (hU : ClassicalUniqueness ν) {u₀ : VelocityField}
       show S (τ s) s x = S (τ 0) s x
       rw [hagree s hs.1 0 h0 hs.2]
     · rw [Ico_eq_empty hT]
-      exact continuousWithinAt_empty
+      -- `ContinuousWithinAt f ∅ x` is `Tendsto f (𝓝[∅] x) (𝓝 (f x))`, and `𝓝[∅] x = ⊥`.
+      simpa [ContinuousWithinAt, nhdsWithin_empty] using tendsto_bot
 
 /-- **Conditional global regularity.** Under (KL), (U), (BKM) and (TM), every admissible
 `u₀` generates a classical solution of the Navier–Stokes equations on `[0, ∞)`, and any two
@@ -95,7 +96,7 @@ theorem conditional_global_regularity_for_NS {ν C κ'' : ℝ} (hC : 0 < C) (hκ
       · choose! S P hSP using h
         refine ⟨fun t => S ((t + T) / 2) t, fun t => P ((t + T) / 2) t, ?_, ?_⟩
         · exact (hSP ((0 + T) / 2) (by linarith)).1
-        · refine glue hU S P (fun t => (t + T) / 2) fun t ht => ?_
+        · refine glue (u₀ := u₀) hU S P (fun t => (t + T) / 2) fun t ht => ?_
           exact ⟨(hSP _ (by linarith [ht.2])).2, (hSP _ (by linarith [ht.2])).1,
             by linarith [ht.2]⟩
       · exact ⟨u₁, p₁, hu₁, hs₁.mono (by linarith)⟩
@@ -109,7 +110,7 @@ theorem conditional_global_regularity_for_NS {ν C κ'' : ℝ} (hC : 0 < C) (hκ
       (by linarith) (by linarith)⟩
   choose! S P hSP using hall
   refine ⟨fun t => S (t + 1) t, fun t => P (t + 1) t, (hSP (0 + 1)).1, fun T => ?_⟩
-  exact glue hU S P (fun t => t + 1) fun t _ => ⟨(hSP _).2, (hSP _).1, by linarith⟩
+  exact glue (u₀ := u₀) hU S P (fun t => t + 1) fun t _ => ⟨(hSP _).2, (hSP _).1, by linarith⟩
 
 /-- **The proved properties of the tether kernel** `B_κ` (for `0 ≤ κ`): it is symmetric in
 `(F, G)`, satisfies the sign condition (C3), and, under (EG) `δH/δω = u` and

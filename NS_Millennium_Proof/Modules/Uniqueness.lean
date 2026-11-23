@@ -90,12 +90,18 @@ def S₀ : ArnoldSetting where
   coadjointAction := fun _ ω => ω
 
 theorem tetherKernel_S₀ (κ : ℝ) (F : Functional) : TetherKernel S₀ κ ω₀ F F = -κ := by
-  have h10 : ⟪e 1, e 0⟫ = (0 : ℝ) := by simp [e, EuclideanSpace.inner_single_left]
+  have h10 : ⟪e 1, e 0⟫ = (0 : ℝ) := by
+    simp only [e]
+    rw [EuclideanSpace.inner_single_left (1 : Fin 3) (1 : ℝ)]
+    simp [PiLp.single_apply]
   have hPi : ForMathlib.Pi_u (velocity_from_vorticity S₀ ω₀) (S₀.funcDeriv F ω₀) =
       fun _ => e 1 := by
     funext x
     simp [ForMathlib.Pi_u, NS.FrohmanianTether.Pi_u, velocity_from_vorticity, S₀, h10]
-  have h11 : ⟪e 1, e 1⟫ = (1 : ℝ) := by simp [e, EuclideanSpace.inner_single_left]
+  have h11 : ⟪e 1, e 1⟫ = (1 : ℝ) := by
+    simp only [e]
+    rw [EuclideanSpace.inner_single_left (1 : Fin 3) (1 : ℝ)]
+    simp [PiLp.single_apply]
   have hω : ∀ x, ‖ω₀.val x‖ = 1 := fun x => by simp [ω₀, e]
   simp only [TetherKernel, hPi, hω, h11]
   simp [torusVolume, Measure.real, volume_cell]
