@@ -68,6 +68,7 @@ theorem Pi_u_self (μ : Measure X) (u : X → E) (h : ∫ y, ‖u y‖ ^ 2 ∂μ
   have hnorm : (∫ y, ⟪u y, u y⟫ ∂μ) = ∫ y, ‖u y‖ ^ 2 ∂μ := by
     congr 1; funext y; exact real_inner_self_eq_norm_sq (u y)
   rw [hnorm, div_self h, one_smul, sub_self]
+  rfl
 
 /-- `L²(μ)` orthogonality of `Π_u v` to `u`. -/
 theorem integral_inner_Pi_u (μ : Measure X) (u v : X → E)
@@ -79,7 +80,6 @@ theorem integral_inner_Pi_u (μ : Measure X) (u v : X → E)
     funext x
     unfold Pi_u
     rw [inner_sub_left, real_inner_smul_left, real_inner_self_eq_norm_sq]
-    rfl
   rw [hpt, integral_sub hvu (hu.const_mul c), integral_const_mul]
   simp only [c]
   field_simp
