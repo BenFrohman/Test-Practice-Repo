@@ -6,3 +6,4 @@ build/
 *.o
 *.a
 .DS_Store
+cert-out/

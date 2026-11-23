@@ -3,229 +3,122 @@ Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Benjamin Stanley Frohman
 -/
-/-
-This file is part of the Lean 4 formalization of the Frohmanian Symplectic Tether Theorem.
+import NS_Millennium_Proof.Modules.SymplecticTether
+import Mathlib.MeasureTheory.Constructions.Pi
 
-See the root document `LaTeX_Lean_Relationship.md` (especially the mapping table in §3)
-for the precise correspondence between this module and the May 31 2026 LaTeX manuscript
-+ the three source documents.
+/-!
+# The claimed uniqueness of the minimal tether (5-step canonicity) is refuted
 
-This module is the dedicated home for all uniqueness arguments in the development.
+The source claims (Theorem 2.3, "5-step canonicity") that the tether kernel `B_κ` is the unique
+bracket correction `B` that is antisymmetric and satisfies (C1)–(C3). Formalized with the
+definitions of `SymplecticTether.lean` this is `MinimalTetherUniqueness S κ`.
 
-## Distinction Between This File and the Skeleton
+Proved here:
+* `zero_bracket_satisfies_conditions`: the zero bracket `B = 0` is antisymmetric and satisfies
+  (C1), (C2) and (C3) in every setting.
+* `antisymmetric_feedback_vacuous`: for an antisymmetric `B`, `B(ω; F, F) = 0`, so (C3) holds
+  automatically and carries no information.
+* `uniqueness_forces_zero_kernel`: `MinimalTetherUniqueness S κ` implies `B_κ ≡ 0`.
+* `tetheredBracket_antisymm_forces_zero`: if `{·,·}_κ` is antisymmetric then
+  `B_κ(ω; F, F) = 0` for all `ω, F`.
+* `not_minimalTetherUniqueness`: in the explicit setting `S₀` (constant fields) and for every
+  `κ ≠ 0`, `B_κ(ω₀; F, F) = -κ ≠ 0`; hence `MinimalTetherUniqueness S₀ κ` is false and `{·,·}_κ`
+  is not antisymmetric there.
 
-- `Uniqueness.lean` (this file) = the actual proofs and lemmas.
-- `Skeleton/UniquenessOverview.lean` = the high-level logical narrative skeleton
-  that declares *what* must be proved, why it matters, and how it connects to
-  the paper sections and the future Metriplectic extension. It mirrors the style
-  of `Skeleton/PaperOverview.lean`.
-
-Referees can read the skeleton first for orientation, then come here for the details.
-
-## Scope of Uniqueness Claims
-
-This module will eventually contain two distinct uniqueness results:
-
-1. **Uniqueness of the Frohmanian Symplectic Tether itself** (the 5-step canonicity
-   proof that 𝔗_F is the unique minimal bilinear antisymmetric correction satisfying
-   the axioms derived from the unmodified 3D incompressible Navier-Stokes vorticity
-   transport equation). This is the core novel geometric contribution.
-
-2. **Uniqueness of global regular solutions** (once the Metriplectic extension and
-   the associated conjecture are introduced after the current proof is accepted as
-   "true"). This will be a future, clearly separated development.
-
-During the current phase the detailed 5-step lemmas still live inside
-`SymplecticTether.lean` (for development convenience while the Jacobi crack is
-being completed). This file provides the clean public interface and will become
-the permanent home once the proofs are fully polished.
+So the uniqueness claim cannot be used as a hypothesis: it is false. The earlier lemmas
+`step1_locality` … `step5_higher_order`, `uniqueness_of_minimal_tether` and
+`uniqueness_of_global_regular_solutions_placeholder` all had statement `True` and were removed.
 -/
 
-module
-
-public import NS_Millennium_Proof.Modules.SymplecticTether
-public import NS_Millennium_Proof.Modules.Assumptions
+open MeasureTheory Set
+open scoped RealInnerProductSpace
+open NavierStokes3D ArnoldGeometric
 
 namespace FrohmanianTether
 
-open FrohmanianTether   -- brings CoadjointOrbit (via Arnold), Functional, TetherKernel, InvariantUnder..., DegenerateWRT..., Produces..., etc. into scope for the 5-step lemmas (now under the canonical FrohmanianTether namespace per naming standard)
-open ArnoldGeometric  -- CoadjointOrbit etc; no hiding (the steps explicitly mention CoadjointOrbit in binders)
+noncomputable section
 
-/-!
-## Tether Uniqueness (5-Step Canonicity)
+/-- The source's uniqueness claim: every antisymmetric `B` with (C1)–(C3) equals `B_κ`. -/
+def MinimalTetherUniqueness (S : ArnoldSetting) (κ : ℝ) : Prop :=
+  ∀ B : Bracket, IsAntisymmetric B → InvariantUnderCoadjointAction S B →
+    DegenerateWRTKineticEnergy S B → ProducesControllableNegativeFeedback B →
+      B = TetherKernel S κ
 
-The following block imports and re-exports the core uniqueness statements
-from the geometric layer. In the final polished state these will be defined
-here directly, with `SymplecticTether` containing only the construction details.
+theorem zero_bracket_satisfies_conditions (S : ArnoldSetting) :
+    IsAntisymmetric (fun _ _ _ => (0 : ℝ)) ∧
+      InvariantUnderCoadjointAction S (fun _ _ _ => 0) ∧
+      DegenerateWRTKineticEnergy S (fun _ _ _ => 0) ∧
+      ProducesControllableNegativeFeedback (fun _ _ _ => 0) :=
+  ⟨fun _ _ _ => by simp, fun _ _ _ _ => rfl, fun _ _ => rfl, fun _ _ => le_rfl⟩
 
-For now we provide the public names that referees and downstream modules
-should cite.
--/
+theorem antisymmetric_feedback_vacuous (B : Bracket) (h : IsAntisymmetric B)
+    (ω : CoadjointOrbit) (F : Functional) : B ω F F = 0 := by
+  have := h ω F F
+  linarith
 
--- The central uniqueness theorem lives natively inside `namespace FrohmanianTether`
--- below. The root re-exports it via `export FrohmanianTether (...)` (no local self-export
--- to avoid "invalid 'export', self export" during module init).
+theorem uniqueness_forces_zero_kernel (S : ArnoldSetting) (κ : ℝ)
+    (h : MinimalTetherUniqueness S κ) (ω : CoadjointOrbit) (F G : Functional) :
+    TetherKernel S κ ω F G = 0 := by
+  obtain ⟨h1, h2, h3, h4⟩ := zero_bracket_satisfies_conditions S
+  exact (congrFun (congrFun (congrFun (h _ h1 h2 h3 h4) ω) F) G).symm
 
--- ============================================================================
--- 5-STEP CANONICITY (moved from SymplecticTether.lean)
--- This implements the changes from the clean low-sorry folder (ns_lean_local_clean)
--- that drastically reduced sorrys and kernel issues in the core geometric file.
--- SymplecticTether is now focused (like the clean snapshot), with the 5-step here.
--- The detailed proofs (case analyses) are preserved with their source citations.
--- ============================================================================
+theorem tetheredBracket_antisymm_forces_zero (S : ArnoldSetting) (κ : ℝ)
+    (h : ∀ (F G : Functional) ω, TetheredBracket S κ F G ω = -TetheredBracket S κ G F ω)
+    (ω : CoadjointOrbit) (F : Functional) : TetherKernel S κ ω F F = 0 := by
+  have := h F F ω
+  rw [tetheredBracket_self] at this
+  linarith
 
-lemma step1_locality
-    (B : CoadjointOrbit → Functional → Functional → ℝ)
-    (_h_antisym : ∀ ω F G, B ω F G = -B ω G F)
-    (_h_inv : InvariantUnderCoadjointAction B) :
-    ∀ (_F _G : Functional) (_ω : CoadjointOrbit),
-      True := by
-  intro _F _G _ω
-  -- (full case analysis and source citations as in previous expansion; see history and Clarified reference for details)
-  exact True.intro
+/-! ## An explicit setting in which `B_κ ≠ 0` -/
 
-lemma step2_degree
-    (B : CoadjointOrbit → Functional → Functional → ℝ)
-    (_h_antisym : ∀ ω F G, B ω F G = -B ω G F) :
-    ∀ (_F _G : Functional) (_ω : CoadjointOrbit),
-      True := by
-  intro _F _G _ω
-  exact True.intro
+theorem volume_cell : volume cell = 1 := by
+  have hcell : cell = (MeasurableEquiv.toLp 2 (Fin 3 → ℝ)).symm ⁻¹'
+      (Set.pi univ fun _ => Ico (0 : ℝ) 1) := by
+    ext x; simp [cell, Set.mem_pi]
+  rw [hcell, (EuclideanSpace.volume_preserving_symm_measurableEquiv_toLp (Fin 3)).measure_preimage
+    (MeasurableSet.univ_pi fun _ => measurableSet_Ico).nullMeasurableSet]
+  simp [volume_pi_pi, Real.volume_Ico]
 
-lemma step3_projection
-    (B : CoadjointOrbit → Functional → Functional → ℝ)
-    (_h_antisym : ∀ ω F G, B ω F G = -B ω G F)
-    (h_deg : DegenerateWRTKineticEnergy B) :
-    ∀ (F : Functional) (ω : CoadjointOrbit),
-      B ω F KineticEnergyHamiltonian = 0 → True := by
-  -- With the real definition of DegenerateWRTKineticEnergy (C2), the premise
-  -- B ω F KineticEnergyHamiltonian = 0 is exactly what h_deg provides.
-  -- The step records that the degeneracy condition (C2) directly gives this for all F, ω.
-  -- The "projection" interpretation (that this forces the use of Π_u in the form of B)
-  -- is made explicit in the TetherKernel formula and the 4-point in the degeneracy theorem.
-  intro F ω h_B_FH_zero
-  exact True.intro   -- trivial once the predicate is the real degeneracy on H; the content is the link to the projector in the broader 5-step classification
+/-- The constant vorticity field `ω₀ = e₃` (periodic and divergence-free). -/
+def ω₀ : CoadjointOrbit :=
+  ⟨fun _ => e 2, fun _ _ => rfl, fun x => by simp [div, partialDeriv]⟩
 
-lemma step4_coefficient
-    (B : CoadjointOrbit → Functional → Functional → ℝ)
-    (_h_antisym : ∀ ω F G, B ω F G = -B ω G F)
-    (h_feedback : ProducesControllableNegativeFeedback B) :
-    ∀ (_F _G : Functional) (_ω : CoadjointOrbit),
-      True := by
-  intro _F _G _ω
-  exact True.intro
+/-- The setting `S₀`: `BS(ω) = e₁`, `δF/δω = e₂`, trivial action. -/
+def S₀ : ArnoldSetting where
+  biotSavart := fun _ _ => e 0
+  funcDeriv := fun _ _ _ => e 1
+  coadjointAction := fun _ ω => ω
 
-lemma step5_higher_order
-    (B : CoadjointOrbit → Functional → Functional → ℝ)
-    (_h_antisym : ∀ ω F G, B ω F G = -B ω G F)
-    (h_deg : DegenerateWRTKineticEnergy B)
-    (_h_feedback : ProducesControllableNegativeFeedback B) :
-    ∀ (_F _G : Functional) (_ω : CoadjointOrbit),
-      True := by
-  intro _F _G _ω
-  exact True.intro
+theorem tetherKernel_S₀ (κ : ℝ) (F : Functional) : TetherKernel S₀ κ ω₀ F F = -κ := by
+  have h10 : ⟪e 1, e 0⟫ = (0 : ℝ) := by
+    simp only [e]
+    rw [EuclideanSpace.inner_single_left (1 : Fin 3) (1 : ℝ)]
+    simp [PiLp.single_apply]
+  have hPi : ForMathlib.Pi_u (velocity_from_vorticity S₀ ω₀) (S₀.funcDeriv F ω₀) =
+      fun _ => e 1 := by
+    funext x
+    simp [ForMathlib.Pi_u, NS.FrohmanianTether.Pi_u, velocity_from_vorticity, S₀, h10]
+  have h11 : ⟪e 1, e 1⟫ = (1 : ℝ) := by
+    simp only [e]
+    rw [EuclideanSpace.inner_single_left (1 : Fin 3) (1 : ℝ)]
+    simp [PiLp.single_apply]
+  have hω : ∀ x, ‖ω₀.val x‖ = 1 := fun x => by simp [ω₀, e]
+  simp only [TetherKernel, hPi, hω, h11]
+  simp [torusVolume, Measure.real, volume_cell]
 
-public theorem uniqueness_of_minimal_tether : True := by
-  -- REAL STATEMENT (to be restored when the 5-step lemmas are expanded with the full
-  -- classification case analysis + power counting + contradictions from the sources):
-  --   ∀ (B : CoadjointOrbit → Functional → Functional → ℝ),
-  --     (∀ ω F G, B ω F G = -B ω G F) →
-  --     InvariantUnderCoadjointAction B →
-  --     DegenerateWRTKineticEnergy B →
-  --     ProducesControllableNegativeFeedback B →
-  --     (∀ ω F G, B ω F G = TetherKernel ω F G)
-  --
-  -- The 5 atomic steps (with the real defs of (C1)–(C3) now in place) classify all
-  -- possible B satisfying the necessary conditions extracted from the unmodified 3D NS
-  -- vorticity equation on the coadjoint orbit. The only object that survives is the
-  -- explicit minimal tethered quadratic correction (TetherKernel). Hence B = TetherKernel.
-  --
-  -- (When the steps are expanded with the full case analysis + power counting +
-  -- contradiction arguments from the PASS 2 / Clarified material, restore the full type
-  -- above and replace this `exact True.intro` with the line-by-line 1st-principles derivation
-  -- with no "it follows". The current skeleton with the lets + real predicate defs makes
-  -- the logical flow, the interface, and non-circularity (Layer 1 only) explicit and auditable.)
-  --
-  -- (The structure of the discharge is recorded in the 5 atomic step lemmas above and the
-  -- detailed comment on the real statement. When the steps are filled, the full typed
-  -- version of this theorem will be restored and proved from the classification.)
-  exact True.intro   -- summed 5-step discharges the (schematic) uniqueness; the real claim
-                     -- and the explicit classification are documented in the comment above
-                     -- and will be restored when the atomic lemmas are filled.
+theorem not_minimalTetherUniqueness (κ : ℝ) (hκ : κ ≠ 0) :
+    ¬ MinimalTetherUniqueness S₀ κ := fun h => by
+  have := uniqueness_forces_zero_kernel S₀ κ h ω₀ (fun _ => 0) (fun _ => 0)
+  rw [tetherKernel_S₀] at this
+  exact hκ (neg_eq_zero.mp this)
 
+theorem tetheredBracket_S₀_not_antisymm (κ : ℝ) (hκ : κ ≠ 0) :
+    ¬ ∀ (F G : Functional) ω, TetheredBracket S₀ κ F G ω = -TetheredBracket S₀ κ G F ω :=
+  fun h => by
+    have := tetheredBracket_antisymm_forces_zero S₀ κ h ω₀ (fun _ => 0)
+    rw [tetherKernel_S₀] at this
+    exact hκ (neg_eq_zero.mp this)
 
-/-!
-## Future: Uniqueness of Global Regular Solutions
-
-Once the author introduces the Metriplectic conjecture (after the current
-Tether proof has been kernel-verified and accepted), a new uniqueness result
-will appear here:
-
-  theorem uniqueness_of_global_regular_solutions
-      (u₁ u₂ : GlobalRegularSolution)
-      (h_init : InitialData u₁ = InitialData u₂)
-      (h_tether : SatisfiesTether u₁ ∧ SatisfiesTether u₂) :
-      u₁ = u₂ := by
-    ...
-
-This result will depend on the (then-proved) Tether uniqueness + the new
-Metriplectic structure, and will be completely separate from the current
-Layer 1 / Layer 2 argument that uses the independent majorant.
-
-The separation of concerns is deliberate and is documented in both
-`LaTeX_Lean_Relationship.md` §5 (Future Extension) and `Blueprint.md`.
--/
-
--- Placeholder theorem name (not yet proved; declared here for roadmap purposes).
--- The actual proof will be supplied after the Metriplectic work begins.
-theorem uniqueness_of_global_regular_solutions_placeholder :
-    True := by
-  -- This is intentionally a placeholder.
-  -- When the Metriplectic extension is added, replace `True` with the real statement
-  -- and supply a proof that cites:
-  --   • the 5-step uniqueness of 𝔗_F (already established)
-  --   • the independent majorant comparison (already established)
-  --   • the new metriplectic degeneracy / dissipation properties
-  -- and nothing else.
-  trivial
-
-/-!
-## Non-Circularity Reminder (Critical for Clay Audit)
-
-All uniqueness claims in this module respect the two-layer architecture:
-
-- Layer 1 uniqueness (the Tether itself) is proved using only the coadjoint orbit
-  geometry, the vorticity transport equation of the *unmodified* NS system, and
-  the five axioms (A1)–(A5) / (C1)–(C3). It does not use any analytic estimates
-  from Layer 2.
-
-- Layer 2 uniqueness (future global regular solutions) will use the already-proved
-  Layer 1 result + the independent majorant (which is introduced *before* any
-  appeal to a particular NS solution) + the new Metriplectic structure.
-
-No arrow ever points from a uniqueness claim back into the justification of
-the classical black boxes or into the construction of the Tether.
-
-See the four living checklists in `Blueprint.md` and the "How to Audit
-Non-Circularity" section.
--/
-
--- =============================================================================
--- VALIDATION RITUAL (run these after any edit to this file)
--- =============================================================================
-
-/-!
-Recommended daily validation commands (copy-paste into the Lean InfoView or
-a terminal with `lake env`):
-
-  #print axioms uniqueness_of_minimal_tether
-  #print axioms uniqueness_of_global_regular_solutions_placeholder
-
-  lake build NS_Millennium_Proof.Modules.Uniqueness
-
-When the proofs become real, also run:
-
-  lean4checker --fresh .lake/build/lib/lean/NS_Millennium_Proof/Modules/Uniqueness.olean
--/
+end
 
 end FrohmanianTether

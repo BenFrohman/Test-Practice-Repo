@@ -3,129 +3,103 @@ Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Benjamin Stanley Frohman
 -/
-module
-
-public import NS_Millennium_Proof.Modules.SymplecticTether
+import Mathlib.Analysis.Calculus.MeanValue
+import Mathlib.Analysis.Calculus.Deriv.Mul
 
 /-!
-# Independent Comparison Majorant (ported from the clean low-sorry folder ns_lean_local_clean)
+# The independent comparison majorant `y' = C y² - κ'' y³`
 
-This module contains the pure ODE majorant and the finite-subinterval 
-control argument (the key non-circularity fix).
+Pure ODE facts, proved in full, about the autonomous majorant equation
+`y' = C y² - κ'' y³ = y² (C - κ'' y)` with constants `C > 0`, `κ'' > 0`, whose equilibria are
+`0` and `y* = C / κ''`.
 
-The comparison y(t) is completely independent of the NS solution.
-This drastically reduces schematic code in the main files and improves kernel hygiene.
+* `le_max_of_subsolution`: every differentiable **sub**solution
+  `M' ≤ C M² - κ'' M³` on `[0, T)` satisfies `M(t) ≤ max (M 0) (C / κ'')` on `[0, T)`.
+* `nonneg_of_solution`: a solution with `y 0 ≥ 0` stays `≥ 0`.
+* `comparison_majorant_global_bound`: a solution with `y 0 ≥ 0` satisfies
+  `0 ≤ y(t) ≤ max (y 0) (C / κ'')` on `[0, T)`, with a bound independent of `T`.
 
-Adapted to the current reorg (imports from current SymplecticTether).
+These statements are about every solution; the existence of a global solution of the ODE
+is not used and not claimed here. The earlier version of this file declared the solution
+`ComparisonODE` and several other functions with `sorry` bodies, and its
+`uniform_majorant_bound` quantified over the two-element list `[0, T]` instead of the interval.
 -/
+
+open Set
 
 namespace IndependentMajorant
 
-open FrohmanianTether  -- updated to canonical per 2026-06-03 naming standard
-open NavierStokes3D  -- for VelocityField, etc.
+/-- Barrier lemma: if `f(0) ≤ A` and, for every `ε > 0`, `f' < ε` wherever `f = A + ε (1 + x)`,
+then `f ≤ A` on `[0, T)`. -/
+theorem le_of_barrier {T A : ℝ} {f f' : ℝ → ℝ} (hf : ∀ t ∈ Ico 0 T, HasDerivAt f (f' t) t)
+    (h0 : f 0 ≤ A)
+    (hbar : ∀ ε > 0, ∀ x ∈ Ico 0 T, f x = A + ε * (1 + x) → f' x < ε) :
+    ∀ t ∈ Ico 0 T, f t ≤ A := by
+  intro t ht
+  have key : ∀ ε > 0, f t ≤ A + ε * (1 + t) := by
+    intro ε hε
+    have hcont : ContinuousOn f (Icc 0 t) := fun s hs =>
+      (hf s ⟨hs.1, hs.2.trans_lt ht.2⟩).continuousAt.continuousWithinAt
+    have hderiv : ∀ x ∈ Ico 0 t, HasDerivWithinAt f (f' x) (Ici x) x := fun x hx =>
+      (hf x ⟨hx.1, hx.2.trans ht.2⟩).hasDerivWithinAt
+    have hstart : f 0 ≤ A + ε * (1 + 0) := by nlinarith
+    have hB : ∀ x, HasDerivAt (fun s => A + ε * (1 + s)) ε x := by
+      intro x
+      simpa using (((hasDerivAt_id x).const_add 1).const_mul ε).const_add A
+    exact image_le_of_deriv_right_lt_deriv_boundary hcont hderiv hstart hB
+      (fun x hx hfx => hbar ε hε x ⟨hx.1, hx.2.trans ht.2⟩ hfx) ⟨ht.1, le_rfl⟩
+  by_contra h
+  push Not at h
+  have h1t : 0 < 1 + t := by linarith [ht.1]
+  have hδ : 0 < (f t - A) / 2 := by linarith
+  have := key ((f t - A) / 2 / (1 + t)) (div_pos hδ h1t)
+  rw [div_mul_cancel₀ _ h1t.ne'] at this
+  linarith
 
-/-- The autonomous comparison ODE (completely decoupled from NS).
-    y' = C y² - κ'' y³ , y(0) = M_ε(0)
--/
-def ComparisonODE (C κ'' y0 : ℝ) : ℝ → ℝ := sorry
+/-- Every subsolution of `y' = C y² - κ'' y³` on `[0, T)` stays below `max (M 0) (C / κ'')`. -/
+theorem le_max_of_subsolution {C κ'' T : ℝ} (hC : 0 < C) (hκ : 0 < κ'') {M M' : ℝ → ℝ}
+    (hM : ∀ t ∈ Ico 0 T, HasDerivAt M (M' t) t)
+    (hineq : ∀ t ∈ Ico 0 T, M' t ≤ C * M t ^ 2 - κ'' * M t ^ 3) :
+    ∀ t ∈ Ico 0 T, M t ≤ max (M 0) (C / κ'') := by
+  refine le_of_barrier hM (le_max_left _ _) fun ε hε x hx hMx => ?_
+  have hY : C / κ'' ≤ max (M 0) (C / κ'') := le_max_right _ _
+  have hpos : 0 < ε * (1 + x) := mul_pos hε (by linarith [hx.1])
+  have hgt : C / κ'' < M x := by rw [hMx]; linarith
+  have hMpos : 0 < M x := lt_trans (div_pos hC hκ) hgt
+  have hκM : C < κ'' * M x := by
+    rw [div_lt_iff₀ hκ] at hgt; linarith
+  have hneg : C * M x ^ 2 - κ'' * M x ^ 3 < 0 := by
+    have : C * M x ^ 2 - κ'' * M x ^ 3 = M x ^ 2 * (C - κ'' * M x) := by ring
+    rw [this]; exact mul_neg_of_pos_of_neg (by positivity) (by linarith)
+  linarith [hineq x hx]
 
-/-- Phase-plane analysis: global boundedness with explicit Y depending only on initial data and universal constants.
-    Proved using only elementary ODE theory (local Lipschitz, sign analysis, continuation).
-    This is the pure-ODE engine.
--/
-theorem comparison_majorant_global_bound (C κ'' y0 : ℝ) (hC : 0 < C) (hκ : 0 < κ'') :
-    ∃ Y : ℝ, ∀ t ≥ 0, 0 ≤ ComparisonODE C κ'' y0 t ∧ ComparisonODE C κ'' y0 t ≤ Y := by
-  -- Full case analysis (y0 < y* or > y*) exactly as in the living document PASS 5.
-  -- (Proof details in Clarified_Degeneracy_and_Majorant_Blocks.lean ; schematic for build hygiene)
-  sorry
+/-- A solution of `y' = C y² - κ'' y³` with `y 0 ≥ 0` stays nonnegative on `[0, T)`. -/
+theorem nonneg_of_solution {C κ'' T : ℝ} (hC : 0 < C) (hκ : 0 < κ'') {y y' : ℝ → ℝ}
+    (hy : ∀ t ∈ Ico 0 T, HasDerivAt y (y' t) t)
+    (hode : ∀ t ∈ Ico 0 T, y' t = C * y t ^ 2 - κ'' * y t ^ 3) (h0 : 0 ≤ y 0) :
+    ∀ t ∈ Ico 0 T, 0 ≤ y t := by
+  have hneg : ∀ t ∈ Ico 0 T, -y t ≤ 0 := by
+    refine le_of_barrier (f := fun s => -y s) (f' := fun s => -y' s)
+      (fun t ht => (hy t ht).neg) (show -y 0 ≤ 0 by linarith) fun ε hε x hx hyx => ?_
+    have hpos : 0 < ε * (1 + x) := mul_pos hε (by linarith [hx.1])
+    have hyx' : -y x = 0 + ε * (1 + x) := hyx
+    have hyneg : y x < 0 := by linarith
+    have : 0 < C * y x ^ 2 - κ'' * y x ^ 3 := by
+      have : C * y x ^ 2 - κ'' * y x ^ 3 = y x ^ 2 * (C - κ'' * y x) := by ring
+      rw [this]
+      exact mul_pos (by nlinarith) (by nlinarith)
+    show -y' x < ε
+    linarith [hode x hx]
+  intro t ht
+  linarith [hneg t ht]
 
-/-- The corrected Lemma 3.1 (non-circular version).
-    
-    On every finite subinterval [0, T] < T* (maximal existence time), 
-    the solution is C^∞ (by local theory), so all norms are finite by smoothness alone on the compact interval.
-    The independent majorant (pure ODE, completely decoupled) then gives
-    M_ε(t) ≤ y(t) ≤ Y on [0,T], with Y depending only on initial data and universal
-    constants (C, κ'' from the preceding Tether Theorem 2.3).
-    Since Y is independent of T, the bound passes to the whole [0, T*).
-    Then Beale–Kato–Majda + parabolic regularity give global smoothness.
-    
-    This is the non-circular continuation argument. The geometric justification for the
-    specific quartic weight in S_ε comes from the Tether uniqueness.
--/
-theorem lemma_3_1_uniform_bound_and_continuation
-    (u0 : VelocityField) (ν : ℝ) (Mε0 C κ'' : ℝ) (hC : 0 < C) (hκ : 0 < κ'') :
-    ∀ (T : ℝ),
-      -- On [0,T] the absorption constants are finite by smoothness alone.
-      -- The independent majorant gives the uniform bound.
-      -- (T < T* where T* from local existence; schematic here)
-      True := by
-  -- Structured proof skeleton with advanced tactics (to be filled when the
-  -- comparison ODE and local existence are connected to the NS solution).
-  -- Details in Clarified_Degeneracy_and_Majorant_Blocks.lean BLOCK 3.
-  sorry
-
--- Local existence time (schematic black box)
-def Tstar (u0 : VelocityField) (ν : ℝ) : ℝ := sorry   -- from local existence (Kato etc)
-
--- ============================================
--- BLOCK 3 from Clarified_Degeneracy_and_Majorant_Blocks.lean (user's clarified)
--- Key differential inequality, comparison, uniform/riccati bounds, etc.
--- These provide the "fully expanded + clarified" versions for the majorant groundwork.
--- Adapted/added here to implement the changes and reduce schematic parts.
--- ============================================
-
--- Mollified vorticity (standard mollifier η_ε)
-def mollified_vorticity (ε : ℝ) (ω : ℝ → VelocityField) : ℝ → VelocityField := sorry
-
--- Mollified sup-norm / Lyapunov functional (quartic weight forced by canonicity)
-def mollified_sup_norm (ε : ℝ) (ω : ℝ → VelocityField) : ℝ := sorry
-
--- Independent comparison majorant (autonomous scalar ODE)
--- y' = C y² - κ'' y³ (form forced by the differential inequality after absorption)
-def comparison_majorant_ODE (t : ℝ) (y0 : ℝ) : ℝ := sorry
-
--- Key differential inequality (derived from tethered bracket + mollification
--- + integration by parts + Hölder + Sobolev + Young absorption)
-lemma key_differential_inequality
-    (ε : ℝ) (ω : ℝ → VelocityField) (t : ℝ) :
-    -- After all integrations by parts on T³, use of tether degeneracy (Π_u(u) = 0),
-    -- Hölder, Sobolev embedding H¹ ↪ L⁶, and Young absorption with parameter ε = κ/4,
-    -- we obtain the schematic form:
-    --   d/dt S_ε(t) ≤ C_abs (1 + M_ε(t)³) ∥ϕ_ε∥_∞ - κ' ∫ |ω_ε|⁶ dλ
-    True := by
-  sorry
-
--- Comparison principle with the independent majorant
-lemma majorant_comparison_principle
-    (ε : ℝ) (ω : ℝ → VelocityField) (t : ℝ) (y0 : ℝ) :
-    -- If M_ε satisfies the differential inequality majorized by the Riccati ODE,
-    -- then M_ε(t) ≤ y(t) on the interval of existence.
-    True := by
-  sorry
-
--- Uniform global bound on the majorant (known a priori from ODE theory alone)
-lemma uniform_majorant_bound (C κ'' T y0 : ℝ) :
-    ∀ t ∈ [0, T], comparison_majorant_ODE t y0 ≤ max y0 (C / κ'') := by
-  -- Follows from phase-plane analysis of the autonomous ODE
-  -- y' = C y² - κ'' y³. Equilibria: y=0 (unstable), y*=C/κ'' (stable).
-  -- Solutions starting in (0, y*) remain bounded above by y*.
-  -- Solutions starting above y* decrease and are bounded by their initial value.
-  sorry
-
--- Rigorous global existence + uniform bound for the Riccati majorant ODE
-lemma riccati_majorant_global_bound (C κ'' y0 : ℝ) (hC : C > 0) (hκ : κ'' > 0) :
-    -- The solution y(t) of y' = C y² - κ'' y³, y(0) = y0 ≥ 0
-    -- exists globally on [0, ∞) and satisfies
-    --   0 ≤ y(t) ≤ max(y0, C/κ'') for all t ≥ 0.
-    True := by
-  sorry   -- Standard phase-plane / comparison argument for scalar ODEs
-
--- Comparison principle that transfers the ODE bound to the mollified Navier-Stokes quantities
-lemma comparison_principle
-    (ε : ℝ) (ω : ℝ → VelocityField) (t : ℝ) (y0 : ℝ) :
-    -- If M_ε satisfies the differential inequality majorized by the Riccati ODE,
-    -- then M_ε(t) ≤ y(t) on the interval of existence.
-    True := by
-  sorry
+/-- **Phase-plane bound.** A solution of `y' = C y² - κ'' y³` with `y 0 ≥ 0` satisfies
+`0 ≤ y(t) ≤ max (y 0) (C / κ'')` on `[0, T)`; the bound does not depend on `T`. -/
+theorem comparison_majorant_global_bound {C κ'' T : ℝ} (hC : 0 < C) (hκ : 0 < κ'')
+    {y y' : ℝ → ℝ} (hy : ∀ t ∈ Ico 0 T, HasDerivAt y (y' t) t)
+    (hode : ∀ t ∈ Ico 0 T, y' t = C * y t ^ 2 - κ'' * y t ^ 3) (h0 : 0 ≤ y 0) :
+    ∀ t ∈ Ico 0 T, 0 ≤ y t ∧ y t ≤ max (y 0) (C / κ'') :=
+  fun t ht => ⟨nonneg_of_solution hC hκ hy hode h0 t ht,
+    le_max_of_subsolution hC hκ hy (fun s hs => (hode s hs).le) t ht⟩
 
 end IndependentMajorant

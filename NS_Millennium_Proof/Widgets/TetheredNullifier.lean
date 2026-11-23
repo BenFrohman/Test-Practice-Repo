@@ -158,8 +158,8 @@ deriving Inhabited, Repr
 -- (JSON instances removed for this build pass; the widget currently only uses the pure Html
 -- placeholder and does not exercise RPC/JSON serialization of OrbitState. When the full
 -- reactive IO.Ref widget is activated, restore meta instances using Json.toJson + meta decls.)
--- This will become a proper per-instance ref when we have RPC + client state.
-meta def defaultOrbitRef : IO.Ref OrbitState := sorry
+-- A fresh mutable reference holding the default orbit state (allocated in `IO`).
+meta def mkDefaultOrbitRef : IO (IO.Ref OrbitState) := IO.mkRef {}
 
 def cancellationQuality (s : OrbitState) : Float :=
   -- When divergence = 0, quality = 1 (perfect cancellation of the three groups).

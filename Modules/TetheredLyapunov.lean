@@ -3,48 +3,20 @@ Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Benjamin Stanley Frohman
 -/
+import NS_Millennium_Proof.Modules.TetheredLyapunov
+
 /-!
-**Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.**
+# Archived snapshot: `Modules/TetheredLyapunov.lean`
 
-**Original Author:** Benjamin Stanley Frohman
+The original text of this file is preserved verbatim in the git history:
 
-This file is part of the original Frohmanian Symplectic Tether framework for the Navier–Stokes Millennium Problem.
+    git show b4001a7:Modules/TetheredLyapunov.lean
+
+(sha256 `979318ee07947c05a22b3e4f314ffc8a5d5eef88c0e7d1801929ae259c7a24e1`, listed in `historical/ARCHIVED_LEAN_SNAPSHOTS.md`).
+
+That text was never compiled by the kernel-certificate build: it was outside the lake
+libraries, and it contained 5 uses of `sorry`/`axiom` outside comments. It proves nothing and is not part of any claim.
+
+This file now only imports the current, kernel-checked module `NS_Millennium_Proof.Modules.TetheredLyapunov`, so that every
+tracked `.lean` file is compiled with no `sorry` and no custom axiom.
 -/
-/-!
-# Tethered Lyapunov + Unconditional Regularity (Expanded Snapshot)
-
-Contains the corrected PASS 5 version of the global regularity argument.
--/
-
-import NS_Millennium_Proof.Modules.SymplecticTether
-
-namespace TetheredLyapunov
-
-open FrohmanianTether
-
-def ComparisonODE (C κ'' y0 : ℝ) : ℝ → ℝ := sorry
-
-theorem comparison_majorant_global_bound (C κ'' y0 : ℝ) (hC : 0 < C) (hκ : 0 < κ'') :
-    ∃ Y, ∀ t ≥ 0, 0 ≤ ComparisonODE C κ'' y0 t ∧ ComparisonODE C κ'' y0 t ≤ Y := by
-  -- Phase plane analysis (two cases: below or above the stable equilibrium)
-  sorry
-
-theorem lemma_3_1_uniform_bound_and_continuation
-    (u₀ : VelocityField) (ν : ℝ) (Mε0 C κ'' : ℝ) (hC : 0 < C) (hκ : 0 < κ'') :
-    -- The key non-circular statement from PASS 5
-    ∀ T < Tstar u₀ ν,
-      True := by   -- full proof with finite subintervals + absorption constants finite by smoothness
-  sorry
-
-where
-  Tstar (u₀ : VelocityField) (ν : ℝ) : ℝ := sorry
-
-theorem global_regularity (u₀ : VelocityField) (ν : ℝ) :
-    -- The final unconditional global smooth solution
-    ∃ u p, NS_PDE u p ν ∧ u 0 = u₀ ∧ ∀ t ≥ 0, ContDiff ℝ ∞ (u t) := by
-  -- 1. Local existence
-  -- 2. Independent majorant + Lemma 3.1 on every [0,T] < T*
-  -- 3. BKM + parabolic regularity
-  sorry
-
-end TetheredLyapunov

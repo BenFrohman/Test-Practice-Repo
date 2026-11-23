@@ -1,6 +1,13 @@
 <!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Blueprint for the Frohmanian Symplectic Tether Theorem
 
+> **Status (Nov 23, 2026).** This document predates the restatement of the Lean development.
+> It contains claims (unconditional global regularity, a proved 5-step uniqueness, a proved
+> Jacobi identity) that the Lean code does **not** prove, and the uniqueness claim is refuted in
+> Lean. What is kernel-checked, what is a named hypothesis and what is false is listed in
+> `README.md`, which is authoritative.
+
+
 > **Clay Cleanup Note (2026-06-02)**: Raw chat histories, proof-evolution diffs, and superseded living documents have been moved to `historical/docs/`. This document, `LaTeX_Lean_Relationship.md`, the Lean sources, and the eight canonical visuals are the authoritative referee materials. See `historical/README.md` for the full rationale.
 
 **Goal**: Every smooth, divergence-free initial velocity field on T³ generates a unique globally smooth solution to the 3D incompressible Navier–Stokes equations.

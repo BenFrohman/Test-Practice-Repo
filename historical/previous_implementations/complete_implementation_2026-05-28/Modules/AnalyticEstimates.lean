@@ -4,39 +4,18 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Benjamin Stanley Frohman
 -/
 /-!
-# Phase 2 (continued): Mollified Lyapunov, Differential Inequality, and Full Regularity
+# Archived snapshot: `historical/previous_implementations/complete_implementation_2026-05-28/Modules/AnalyticEstimates.lean`
 
-Direct translation of Section 3 + all PASS refinements from the living document.
-All steps justified using only previously established geometric properties and the independent majorant.
+The original text of this file is preserved verbatim in the git history:
+
+    git show b4001a7:historical/previous_implementations/complete_implementation_2026-05-28/Modules/AnalyticEstimates.lean
+
+(sha256 `23af401446b170ae134a6c8df25cad839ec3c4a4632971fac32240ae6abf77ed`, listed in `historical/ARCHIVED_LEAN_SNAPSHOTS.md`).
+
+That text was never compiled by the kernel-certificate build: it was outside the lake
+libraries, it imported modules that do not exist in this tree, and it contained 5 uses of `sorry`/`axiom` outside comments. It proves nothing and is not part of any claim.
+
+This file now contains only this note, so that every tracked `.lean` file is compiled with
+no `sorry` and no custom axiom. The kernel-checked development is the `NS_Millennium_Proof`
+library; see `README.md`.
 -/
-
-import NS_Millennium_Proof.Lean_Formalization_2026_05_28.Modules.IndependentMajorant
-
-namespace AnalyticEstimates
-
-open IndependentMajorant SymplecticTether
-
--- Mollifier, auxiliary field, S_ε, differential inequality derivation
--- (full details with all cancellations, Hölder, Sobolev, Young absorption exactly as in the living document)
-def MollifiedVorticity (ω : ℝ → VorticityField) (ε t : ℝ) : VorticityField := sorry
-def EnstrophyAccumulationField : Type := sorry
-
-def TetheredLyapunovFunctional (ω : ℝ → VorticityField) (ε t : ℝ) : ℝ := sorry
-
-theorem differential_inequality_for_S_epsilon : True := by
-  -- All transport terms cancel by periodicity + div u = 0.
-  -- Viscous term ≤ 0.
-  -- Stretching bounded by C_CZ M² (from earlier geometric/CZ properties).
-  -- Absorption using the quartic weight justified by uniqueness theorem.
-  -- Result: dS/dt ≤ C_abs (1 + M³ ||φ||^{3/2}) - κ' ∫ |ω_ε|^6
-  sorry
-
--- Then apply the independent majorant + Lemma 3.1
-theorem global_regularity_from_independent_majorant : True := by
-  -- On any [0,T] < T*, constants finite by smoothness.
-  -- Majorant gives bound.
-  -- BKM + parabolic regularity.
-  -- Exactly the structure from PASS 5 in the living document.
-  sorry
-
-end AnalyticEstimates

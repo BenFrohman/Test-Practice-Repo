@@ -3,284 +3,129 @@ Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Benjamin Stanley Frohman
 -/
-module
+import NS_Millennium_Proof.Modules.Continuation
+import NS_Millennium_Proof.Modules.TetheredLyapunov
+import NS_Millennium_Proof.Modules.SymplecticTether
 
-public import NS_Millennium_Proof.Modules.SymplecticTether
-public import NS_Millennium_Proof.Modules.TetheredLyapunov
-public import NS_Millennium_Proof.Modules.ArnoldGeometric
-public import NS_Millennium_Proof.Modules.NS_Equations
-public import Mathlib.Analysis.Calculus.ContDiff.Basic  -- for ContDiff ℝ ⊤ (used in IsSmooth and schematic statements)
+/-!
+# Conditional global regularity for 3D Navier–Stokes on `𝕋³`
 
--- NOTE (post-bumper-rails phase): All silencing options removed. Warnings for classical `sorry`s
--- (pin weakenings and assembly) are now visible. Full convention documented in TetheredLyapunov.lean.
+**This file does not prove global regularity of the Navier–Stokes equations and does not
+solve the Clay Millennium problem.** It proves that global regularity *follows from* four named
+hypotheses, three classical and one open:
 
--- Error Explanations (Lean Language Reference) — Assembly Layer
--- This file historically contained the last 7 hard errors (custom unicode-in-identifier notation,
--- ambiguous CoadjointOrbit export, ContDiff ∞ syntax, vorticity_L references). All were fixed
--- in the "priority 2" work (clean ASCII identifiers, open hygiene with `hiding`, granular
--- ContDiff import, alignment to the 6-arg schematic global_regularity signature).
--- The full Error Explanations table integration (this session) confirms that the current state
--- avoids every row:
--- • synthInstanceFailed / unknownIdentifier / invalidDottedIdent / invalidField: eliminated by
---   the notation cleanup and the explicit `open ArnoldGeometric hiding CoadjointOrbit`.
--- • inferBinderTypeFailed: the schematic theorems (frohmanian_tether_theorem,
---   global_regularity_for_NS) now have fully explicit 6-arg signatures matching the author
---   abstract; all binders are elaborated before bodies.
--- • dependsOnNoncomputable: the top-level schematic theorems that still contain `True.intro`
---   slots for the weakened smoothness claim are correctly marked or live inside a context
---   that permits the classical black boxes they invoke.
--- • projNonPropFromProp / propRecLargeElim: the only Prop-level slots are the explicit
---   `True` placeholders (per 4.2 proof irrelevance). They are never eliminated into data.
--- • redundantMatchAlt / inductionWithNoAlts: none present.
--- • ctor* / inductiveParam*: no new inductives declared here.
--- The assembly point deliberately stays thin (it only wires Layer 1 geometric justification
--- to Layer 2 analytic continuation). This keeps the error surface minimal and makes the
--- "unique proof confirmation" property easy to audit: any future green proof of the novel
--- geometry will be visibly the one that satisfies the author abstract's ∃! form.
--- Cross-ref: all prior reference blocks (especially §5 module hygiene and the GlobalRegularity
--- cleanup that removed the last hard errors) are still in force.
+* (KL)  `KatoLocalExistence ν`          — classical (Kato 1972), not formalized here;
+* (U)   `ClassicalUniqueness ν`         — classical, not formalized here;
+* (BKM) `BealeKatoMajdaContinuation ν`  — classical (Beale–Kato–Majda 1984), not formalized here;
+* (TM)  `TetherMajorantInequality ν C κ''` — **open**; it is the analytic claim of the source.
 
-/-! # Global Regularity: Final Integration and the Frohmanian Symplectic Tether Theorem
+Main results:
 
-This module assembles everything and states the main theorem exactly as
-formulated in the audited LaTeX (including the three parts of Theorem 2.1
-and the unconditional corollary from the PASS 5 argument).
+* `glue`: classical solutions with the same data glue to a solution on the union of their
+  intervals (from (U)).
+* `conditional_global_regularity_for_NS`: (KL) + (U) + (BKM) + (TM) imply that every smooth,
+  divergence-free, periodic `u₀` generates a classical solution on `[0, ∞)`, unique on `[0, ∞)`.
+* `frohmanian_tether_theorem_conditional`: the proved properties of the tether kernel.
 
-The top-level statement below is the exact Abstract formulation supplied by the author
-(Sections 1 + overall theorem), using the Frohmanian Symplectic Tether as the central device.
+Uniqueness is stated on `[0, ∞)`. The earlier statement used `∃! u : ℝ → VelocityField`, which
+is false as written because the values of `u` at negative times are unconstrained.
 -/
+
+open Set Filter Topology MeasureTheory
+open NavierStokes3D ArnoldGeometric FrohmanianTether TetheredLyapunov
 
 namespace GlobalRegularity
 
-open FrohmanianTether TetheredLyapunov
-open ArnoldGeometric hiding CoadjointOrbit
-open ArnoldGeometric (CoadjointOrbit)  -- explicit to satisfy the schematic theorem signatures without ambiguity
-open NavierStokes3D
--- FrohmanianTether ns (containing uniqueness_of_minimal_tether) is qualified below to avoid
--- "unknown namespace" during module elaboration (the export in root makes it available at top level).
+/-- Gluing: if, for each `t ∈ [0, T)`, `S (τ t)` is a classical solution on `[0, τ t)` with
+data `u₀` and `t < τ t`, then `t ↦ S (τ t) t` is a classical solution on `[0, T)`. -/
+theorem glue {ν T : ℝ} (hU : ClassicalUniqueness ν) {u₀ : VelocityField}
+    (S : ℝ → TimeDependentVelocity) (P : ℝ → TimeDependentPressure) (τ : ℝ → ℝ)
+    (hS : ∀ t ∈ Ico 0 T,
+      IsClassicalSolutionOn ν (S (τ t)) (P (τ t)) (τ t) ∧ S (τ t) 0 = u₀ ∧ t < τ t) :
+    IsClassicalSolutionOn ν (fun t => S (τ t) t) (fun t => P (τ t) t) T := by
+  have hagree : ∀ s ∈ Ico 0 T, ∀ t ∈ Ico 0 T, s < τ t → S (τ s) s = S (τ t) s :=
+    fun s hs t ht hst => hU _ _ _ _ (τ s) (τ t) (hS s hs).1 (hS t ht).1
+      ((hS s hs).2.1.trans (hS t ht).2.1.symm) s hs.1 (hS s hs).2.2 hst
+  refine ⟨fun t ht => (hS t ht).1.1 t ⟨ht.1, (hS t ht).2.2⟩, fun t ht x => ?_, fun x => ?_⟩
+  · have htT : t ∈ Ico 0 T := ⟨ht.1.le, ht.2⟩
+    have hd := (hS t htT).1.2.1 t ⟨ht.1, (hS t htT).2.2⟩ x
+    refine hd.congr_of_eventuallyEq ?_
+    filter_upwards [Ioo_mem_nhds ht.1 (lt_min ht.2 (hS t htT).2.2)] with s hs
+    have hsT : s ∈ Ico 0 T := ⟨hs.1.le, hs.2.trans_le (min_le_left _ _)⟩
+    show S (τ s) s x = S (τ t) s x
+    rw [hagree s hsT t htT (hs.2.trans_le (min_le_right _ _))]
+  · by_cases hT : 0 < T
+    · have h0 : (0 : ℝ) ∈ Ico 0 T := ⟨le_rfl, hT⟩
+      have hc := (hS 0 h0).1.2.2 x
+      have hmem : Ico 0 (τ 0) ∈ 𝓝[Ico 0 T] (0 : ℝ) :=
+        mem_nhdsWithin.mpr ⟨Iio (τ 0), isOpen_Iio, (hS 0 h0).2.2, fun s hs => ⟨hs.2.1, hs.1⟩⟩
+      refine (hc.mono_of_mem_nhdsWithin hmem).congr_of_eventuallyEq ?_ rfl
+      filter_upwards [inter_mem self_mem_nhdsWithin
+        (mem_nhdsWithin_of_mem_nhds (Iio_mem_nhds (hS 0 h0).2.2))] with s hs
+      show S (τ s) s x = S (τ 0) s x
+      rw [hagree s hs.1 0 h0 hs.2]
+    · rw [Ico_eq_empty hT]
+      -- `ContinuousWithinAt f ∅ x` is `Tendsto f (𝓝[∅] x) (𝓝 (f x))`, and `𝓝[∅] x = ⊥`.
+      simpa [ContinuousWithinAt, nhdsWithin_empty] using tendsto_bot
 
-/-! ## Main Theorem — Frohmanian Symplectic Tether Theorem -/
+/-- **Conditional global regularity.** Under (KL), (U), (BKM) and (TM), every admissible
+`u₀` generates a classical solution of the Navier–Stokes equations on `[0, ∞)`, and any two
+such solutions agree on `[0, ∞)`. -/
+theorem conditional_global_regularity_for_NS {ν C κ'' : ℝ} (hC : 0 < C) (hκ : 0 < κ'')
+    (hKL : KatoLocalExistence ν) (hU : ClassicalUniqueness ν)
+    (hBKM : BealeKatoMajdaContinuation ν) (hTM : TetherMajorantInequality ν C κ'')
+    (u₀ : VelocityField) (hadm : IsAdmissibleData u₀) :
+    (∃ (u : TimeDependentVelocity) (p : TimeDependentPressure),
+        u 0 = u₀ ∧ ∀ T, IsClassicalSolutionOn ν u p T) ∧
+      ∀ (u v : TimeDependentVelocity) (p q : TimeDependentPressure),
+        u 0 = u₀ → (∀ T, IsClassicalSolutionOn ν u p T) →
+        v 0 = u₀ → (∀ T, IsClassicalSolutionOn ν v q T) → ∀ t ≥ 0, u t = v t := by
+  obtain ⟨T₁, hT₁, u₁, p₁, hu₁, hs₁⟩ := hKL u₀ hadm
+  have hall : ∀ T, ∃ (u : TimeDependentVelocity) (p : TimeDependentPressure),
+      u 0 = u₀ ∧ IsClassicalSolutionOn ν u p T := by
+    refine Continuation.global_of_continuation
+      (E := fun T => ∃ (u : TimeDependentVelocity) (p : TimeDependentPressure),
+        u 0 = u₀ ∧ IsClassicalSolutionOn ν u p T)
+      (Bd := fun T => ∀ (u : TimeDependentVelocity) (p : TimeDependentPressure),
+        u 0 = u₀ → IsClassicalSolutionOn ν u p T → VorticityBoundedOn u T)
+      ⟨T₁, hT₁, u₁, p₁, hu₁, hs₁⟩ ?_ ?_ ?_ ?_
+    · rintro T T' ⟨u, p, h0, hs⟩ hle
+      exact ⟨u, p, h0, hs.mono hle⟩
+    · intro T h
+      by_cases hT : 0 < T
+      · choose! S P hSP using h
+        refine ⟨fun t => S ((t + T) / 2) t, fun t => P ((t + T) / 2) t, ?_, ?_⟩
+        · exact (hSP ((0 + T) / 2) (by linarith)).1
+        · refine glue (u₀ := u₀) hU S P (fun t => (t + T) / 2) fun t ht => ?_
+          exact ⟨(hSP _ (by linarith [ht.2])).2, (hSP _ (by linarith [ht.2])).1,
+            by linarith [ht.2]⟩
+      · exact ⟨u₁, p₁, hu₁, hs₁.mono (by linarith)⟩
+    · rintro T hT ⟨u, p, h0, hs⟩ hbd
+      obtain ⟨T', hT', v, q, hv0, hv⟩ := hBKM u₀ hadm T hT u p h0 hs (hbd u p h0 hs)
+      exact ⟨T', hT', v, q, hv0, hv⟩
+    · intro T hT _ u p h0 hs
+      exact vorticityBoundedOn_of_tether hC hκ hTM hadm hT h0 hs
+  refine ⟨?_, fun u v p q hu0 hu hv0 hv t ht =>
+    hU u v p q (t + 1) (t + 1) (hu (t + 1)) (hv (t + 1)) (hu0.trans hv0.symm) t ht
+      (by linarith) (by linarith)⟩
+  choose! S P hSP using hall
+  refine ⟨fun t => S (t + 1) t, fun t => P (t + 1) t, (hSP (0 + 1)).1, fun T => ?_⟩
+  exact glue (u₀ := u₀) hU S P (fun t => t + 1) fun t _ => ⟨(hSP _).2, (hSP _).1, by linarith⟩
 
-/-- High-level statement of the full theorem (for documentation / roadmap).
-The actual work is split across SymplecticTether.lean (existence + uniqueness of the Tether)
-and TetheredLyapunov.lean (unconditional global regularity via independent majorant).
-This theorem is intentionally schematic during development.
--/
-theorem frohmanian_tether_theorem :  -- canonical name per Frohmanian_Tether_Naming_Symbol_Standard.md (table (9).csv)
-  ∃ (𝔗_F : CoadjointOrbit → Functional → Functional → ℝ),
-    (∀ F ω, TetheredBracket F KineticEnergyHamiltonian ω = ClassicalBracket F KineticEnergyHamiltonian ω) ∧
-    (∀ (B : CoadjointOrbit → Functional → Functional → ℝ),
-      (∀ ω F G, B ω F G = -B ω G F) →
-      InvariantUnderCoadjointAction B →
-      DegenerateWRTKineticEnergy B →
-      ProducesControllableNegativeFeedback B →
-      ∀ ω F G, B ω F G = 𝔗_F ω F G) ∧
-    (∀ (u₀ : VelocityField) (ν : ℝ),
-      (∀ x, div u₀ x = 0) →
-      ContDiff ℝ ⊤ u₀ →
-      ∃ (u : ℝ → VelocityField) (p : ℝ → PressureField),
-        NS_PDE u p ν ∧
-        u 0 = u₀ ∧
-        (∀ t ≥ 0, True) ∧   -- smoothness upgrade (C^∞) is the classical BKM + parabolic regularity black box
-                            -- delivered after the a-priori vorticity bound from the tether + majorant
-        (∀ t ≥ 0, ∀ x, div (u t) x = 0)) := by
-  -- Existence of 𝔗_F comes from the explicit construction TetherKernel.
-  -- The three conjuncts are proved in:
-  --   - tethered_reproduces_classical_euler
-  --   - uniqueness_of_minimal_tether
-  --   - global_regularity (TetheredLyapunov)
-  refine ⟨TetherKernel, ?_, ?_, ?_⟩
-  · intro F ω
-    exact tethered_reproduces_classical_euler F ω
-  · sorry   -- uniqueness_of_minimal_tether (5-step canonicity from Uniqueness.lean / FrohmanianTether ns; schematic slot while names/exports stabilize across modules)
-  · intro u₀ ν hdiv hsm
-    -- Call matches the 6-argument signature in TetheredLyapunov.global_regularity.
-    -- h_smooth and h_finite_energy are weakened to True (classical local existence black box);
-    -- h_pos_ν is supplied as sorry (the outer schematic statement does not assume ν>0 explicitly).
-    exact global_regularity u₀ ν hdiv (by exact True.intro) (by exact True.intro) (by sorry)
+/-- **The proved properties of the tether kernel** `B_κ` (for `0 ≤ κ`): it is symmetric in
+`(F, G)`, satisfies the sign condition (C3), and, under (EG) `δH/δω = u` and
+`‖u‖²_{L²} ≠ 0`, it is degenerate on `H` so that `{F, H}_κ = {F, H}`. -/
+theorem frohmanian_tether_theorem_conditional (S : ArnoldSetting) {κ : ℝ} (hκ : 0 ≤ κ) :
+    (∀ ω F G, TetherKernel S κ ω F G = TetherKernel S κ ω G F) ∧
+      ProducesControllableNegativeFeedback (TetherKernel S κ) ∧
+      (EnergyGradientIsVelocity S → ∀ ω : CoadjointOrbit,
+        ∫ y, ‖velocity_from_vorticity S ω y‖ ^ 2 ∂torusVolume ≠ 0 → ∀ F,
+          TetheredBracket S κ F (KineticEnergyHamiltonian S) ω =
+            ClassicalBracket S F (KineticEnergyHamiltonian S) ω) :=
+  ⟨tetherKernel_symm S κ, tetherKernel_feedback S κ hκ,
+    fun hE ω hω F => tethered_reproduces_classical_euler S κ hE ω hω F⟩
 
-/-! ## Abstract (exact formulation supplied by the author) -/
-
-open NavierStokes3D
-
-/-- IsSmooth is the classical notion of infinite differentiability (black-box via ContDiff). -/
-abbrev IsSmooth (f : VelocityField) : Prop := ContDiff ℝ ⊤ f
-
-/-- Sup-norm (L^∞) of a vorticity field (classical, black-box, using clean ASCII name to avoid
-unicode identifier issues in the current Lean/mathlib pin).
-Still exactly matches the abstract intent: a classical sup-norm proxy for |ω|_{L^∞} used in BKM-type criteria.
-
-Marked noncomputable because it depends on Real.instSupSet (standard for sup-norm proxies in analysis). -/
-noncomputable def vorticity_sup_norm (ω : VorticityField) : ℝ :=
-  ⨆ x, ‖ω x‖   -- or essSup with respect to volume; this is the classical sup-norm proxy used in the paper
-
--- Clean alias (no custom unicode notation) provided so that references in comments / the abstract
--- theorem can mention the L^∞ control without triggering parser/elaboration problems.
-noncomputable abbrev vorticity_sup_norm_proxy (ω : VorticityField) : ℝ := vorticity_sup_norm ω
-
-/-- The solution satisfies the unmodified 3D incompressible Navier–Stokes equations.
-This is linked directly to the exact form `navier_stokes_eq` from Sections 1–2.1. -/
-def satisfies_NavierStokes (u : TimeDependentVelocity) (ν : ℝ) : Prop :=
-  ∃ p : TimeDependentPressure, navier_stokes_eq u p ν
-
-/-- Main theorem (Abstract, formalized).
-
-Every smooth, divergence-free initial velocity field on the three-torus generates
-a unique globally smooth solution to the 3D incompressible Navier–Stokes equations.
-
-This is the top-level statement whose proof proceeds via the Frohmanian Symplectic Tether
-(the 5-step uniqueness + tethered Lyapunov + independent majorant + BKM upgrade).
--/
-theorem global_regularity_for_NS
-    (u0 : TimeDependentVelocity)
-    (h_div_free : ∀ t x, div (u0 t) x = 0)
-    (h_smooth : IsSmooth (u0 0))
-    (h_finite_energy : True)  -- weakened for this old mathlib pin; should be finite energy condition
-    (ν : ℝ) (h_ν_pos : ν > 0) :
-  ∃! (u : TimeDependentVelocity),
-    (∀ t ≥ 0, IsSmooth (u t)) ∧
-    (u 0 = u0 0) ∧
-    (∀ t ≥ 0, satisfies_NavierStokes u ν) ∧
-    (∀ t ≥ 0, True) := by  -- vorticity_sup_norm_proxy (vorticity (u t)) < ∞  (the key a-priori bound delivered by the tether + majorant)
-  -- The proof proceeds via the Frohmanian Symplectic Tether
-  -- (detailed in SymplecticTether.lean for the 5-step uniqueness,
-  --  TetheredLyapunov.lean for the tethered energy + majorant + continuation,
-  --  and the assembly in this file).
-  --
-  -- The `∃!` (uniqueness) follows from the classical local well-posedness
-  -- combined with the a-priori bound coming from the tether.
-  sorry
-
--- Note on the original supplied statement:
--- The initial-data integrability condition used `HasFiniteIntegral (fun t => u0 t • x) vol`.
--- The version above uses the standard finite kinetic energy at t=0, which is the
--- classical assumption in the literature and in the rest of this formalization.
--- The L^∞ bound on vorticity is the key quantity controlled by the tether + majorant.
-
-/-!
-# Validating a Lean Proof — Integration of the Lean Language Reference
-
-This block was added during the systematic reference-integration campaign upon receipt of the
-full "Validating a Lean Proof" section (escalating checks: blue double ticks → #print axioms →
-lean4checker --fresh → gold-standard comparator + external checkers).
-
-The section is of the *highest* importance for this project because:
-- The central claim (global regularity via the novel Frohmanian Symplectic Tether) is a
-  high-stakes mathematical result (Clay Millennium Problem territory).
-- The user has repeatedly emphasized the desire for "unique proof confirmation".
-- Much of the proof is still under active development (schematic `True` placeholders + classical
-  black-box `sorry`s). Transparent validation hygiene is therefore essential.
-
-Current toolchain (as of this session): `leanprover/lean4:v4.28.0`
-(This is exactly the version the user requested we retain, matching Terence Tao’s Analysis I
-repository pin. On 4.28.0 the older `Lean.trustCompiler` mechanism is still active for any
-native evaluation. See the dedicated subsection below.)
-
-## The Four Escalating Levels of Validation (directly from the reference)
-
-1. **Blue Double Check Marks (everyday interactive use)**
-   - What it means: The theorem elaborated successfully and the kernel accepted a proof term
-     constructed from the definitions, theorems, and axioms in scope.
-   - Current status for this project: Once the remaining schematic `sorry`s inside the novel
-     geometry (especially the six named sub-haves in `h_cyclic_integrand_zero` in SymplecticTether)
-     and the classical black boxes are filled or properly cited, the blue ticks will appear on
-     `global_regularity_for_NS` and `frohmanian_tether_theorem`.
-   - Protection: incomplete proofs, explicit `sorry` in the *current* theorem, honest tactic bugs.
-   - Limitation: does *not* detect `sorry` or incomplete proofs in dependencies.
-
-2. **#print axioms thmName**
-   - What it means: Lists every axiom the theorem (and everything it depends on) relies upon.
-   - Expected output on a finished proof of the novel geometry:
-       `propext`, `Classical.choice`, `Quot.sound`
-     (the three standard axioms of Lean's logic — benign).
-   - Any appearance of `sorryAx` → the theorem or a dependency uses `sorry` or is incomplete.
-   - Any appearance of `Lean.trustCompiler` (on 4.28.0) → native evaluation was used somewhere
-     in the dependency chain (see dedicated note below).
-   - Any other custom axiom → the result is only valid relative to the soundness of that axiom.
-   - **Action taken in this file**: concrete `#print axioms` commands are placed immediately after
-     the two top-level schematic theorems (see below).
-
-3. **lean4checker --fresh**
-   - Replays the proofs stored in the `.olean` files through the kernel.
-   - Catches a small class of bugs in Lean's core handling of kernel state and simple attacks
-     that bypass the elaborator.
-   - Recommended as part of CI (the lean-action GitHub Action supports `lean4checker: true`).
-   - Limitation: still trusts the structural integrity of the `.olean` files themselves.
-
-4. **Gold Standard: comparator + external checkers (nanoda, etc.)**
-   - For high-risk scenarios (proof marketplaces, high-reward competitions, unaligned AI,
-     or when one wants protection against seriously malicious proof attempts that try to
-     compromise how Lean interprets a statement).
-   - Builds in a sandbox, exports the proof term to a serialized format, then validates
-     *outside* the sandbox using both Lean's kernel *and* independent external checkers.
-   - This is the level that would give the strongest "unique proof confirmation" for the
-     novel Frohmanian geometry (the 5-step canonicity + explicit Jacobi identity on F_p).
-   - Requires that the proof avoid `Lean.trustCompiler` / native evaluation on 4.28.0
-     (external checkers have no access to the Lean compiler).
-
-## On Lean.trustCompiler (relevant because we are pinned to 4.28.0)
-
-The project is deliberately kept on `v4.28.0` (per the user's explicit request, matching the
-pin used in Terence Tao’s Analysis I formalization repository).
-
-On this version:
-- Any use of `decide +native`, `bv_decide`, or direct `Lean.ofReduceBool` introduces the axiom
-  `Lean.trustCompiler`.
-- External checkers (lean4checker with --fresh, comparator + nanoda) *cannot* replay such proofs.
-- The reference is clear: "When that level of checking is needed, proofs have to avoid using
-  native evaluation."
-
-**Project policy for validation levels (honest vs. malicious context)**
-
-- Classical black-box infrastructure (local existence, BKM, parabolic regularity, CZ estimates,
-  transport/Young/Hölder algebra, ODE comparison, etc.) may freely use any convenient tactics,
-  including native evaluation, during development. These are documented with citations and
-  will eventually be replaced by citations to mathlib or small ForMathlib lemmas.
-- The *novel geometric core* (everything in SymplecticTether.lean: TetherKernel definition,
-  the five atomic `step1_locality` … `step5_higher_order` lemmas, `tethered_jacobi_identity`
-  with its explicit cyclic-sum calculation on test functionals F_p, degeneracy proofs,
-  invariance, etc.) **must eventually be free of native evaluation** if we ever wish to subject
-  the final artifact to comparator + external checkers for the strongest possible assurance.
-- The analytic layer in TetheredLyapunov (majorant ODE, differential inequality, Lemma 3.1
-  continuation) sits in the middle: the independent-majorant construction itself is pure
-  mathematics and should be kernel-checkable; heavy numerical or decision-procedure work
-  inside classical inequalities can stay native if clearly marked.
-
-This distinction directly supports the four living audit checklists (especially Non-Circularity
-and Canonicality) and the two-layer architecture.
-
-## Current Honest Development State (rails off)
-
-As long as schematic `True := by sorry` placeholders or classical black-box `sorry`s remain
-inside `global_regularity_for_NS`, `frohmanian_tether_theorem`, or any lemma they
-depend on, `#print axioms` will report `sorryAx`. This is *expected and visible*.
-
-The presence of `sorryAx` is not a bug in the formalization strategy; it is the honest signal
-that the novel geometry (especially the remaining algebra inside `h_cyclic_integrand_zero`)
-and the last classical sub-calculations are still being filled line-by-line from the three
-source documents.
-
-When the Jacobi crack is completed and the classical black boxes are either cited or replaced
-by small lemmas, the only axioms that should remain for the novel claims are the three
-standard ones (plus possibly a small number of clearly documented custom axioms for any
-deeply classical analytic facts that mathlib does not yet contain).
-
-## Concrete Commands (live in this file)
-
-After the two main theorems you will find:
-
-    #print axioms frohmanian_tether_theorem
-    #print axioms global_regularity_for_NS
-
-Run these (or `lake build` followed by inspecting the output) to see the current axiom
-surface. As the proof matures, these commands become part of the permanent validation
-ritual.
-
-See the new "Validation and Trust Strategy" section in Blueprint.md for the full mapping of
-these four levels onto the project's novel geometry and the goal of unique proof confirmation.
--/
-
-#print axioms frohmanian_tether_theorem
-#print axioms global_regularity_for_NS
+#print axioms conditional_global_regularity_for_NS
+#print axioms frohmanian_tether_theorem_conditional
 
 end GlobalRegularity

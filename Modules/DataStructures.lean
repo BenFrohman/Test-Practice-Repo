@@ -4,39 +4,18 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Benjamin Stanley Frohman
 -/
 /-!
-**Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.**
+# Archived snapshot: `Modules/DataStructures.lean`
 
-**Original Author:** Benjamin Stanley Frohman
+The original text of this file is preserved verbatim in the git history:
 
-This file is part of the original Frohmanian Symplectic Tether framework for the Navier–Stokes Millennium Problem.
+    git show b4001a7:Modules/DataStructures.lean
+
+(sha256 `4164acca237418d62f5b8fd45d3eb0423912cc6d5ae0df320562e0a719eab046`, listed in `historical/ARCHIVED_LEAN_SNAPSHOTS.md`).
+
+That text was never compiled by the kernel-certificate build: it was outside the lake
+libraries, and it contained 1 uses of `sorry`/`axiom` outside comments. It proves nothing and is not part of any claim.
+
+This file now contains only this note, so that every tracked `.lean` file is compiled with
+no `sorry` and no custom axiom. The kernel-checked development is the `NS_Millennium_Proof`
+library; see `README.md`.
 -/
-/-!
-# Data Structures for the Formalization (Array vs List)
-
-From Lean core:
-- `Array α` is a dynamic array with special runtime support.
-- For proofs, `Array α` is equivalent to `List α` (wrapper).
-- Performance: Best when unshared (destructive updates).
-- In this proof: Use `Array` for discretized fields on T³ (vorticity, velocity) for efficient computation in the implementation view.
-- For mathematical proofs: View as `List` or use `Array.toList` / equivalence lemmas.
-
-Recommendation for this NS formalization:
-- Represent vorticity fields as `Array (Array (Array ℝ³))` or flattened `Array ℝ³` indexed by 3D coords (for performance in potential simulations or Galerkin).
-- Prove equivalence to functional `T3 → ℝ³` representation used in the abstract geometric parts.
-- This bridges the continuous math (from the LaTeX) to discrete computation if needed for verification.
-
-Example:
-def FieldArray : Type := Array ℝ³   -- flattened for T³ grid
--- Equivalence theorems to the functional view in ArnoldGeometric etc.
--/
-import Mathlib.Data.Array.Basic
-
-namespace DataStructures
-
--- Placeholder for field representation using Array (for efficiency)
-abbrev VorticityArray := Array (Fin 3 → ℝ)  -- or more structured
-
--- Proof-relevant: Array as List wrapper
-theorem array_as_list_equiv (α : Type) : Array α ≃ List α := sorry  -- Use mathlib equivalences when available
-
-end DataStructures
