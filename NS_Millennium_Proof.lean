@@ -3,6 +3,8 @@ Copyright (c) 2026 Benjamin Stanley Frohman. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Benjamin Stanley Frohman
 -/
+module
+
 /-!
 # NS Millennium Proof — Frohmanian Symplectic Tether (Main Entry)
 
@@ -11,13 +13,14 @@ Authors: Benjamin Stanley Frohman
 Original work by Benjamin Frohman.
 -/
 
-import NS_Millennium_Proof.ForMathlib.NS.Tether
-import NS_Millennium_Proof.Modules.NS_Equations
-import NS_Millennium_Proof.Modules.ArnoldGeometric
-import NS_Millennium_Proof.Modules.SymplecticTether
-import NS_Millennium_Proof.Modules.TetheredLyapunov
-import NS_Millennium_Proof.Modules.GlobalRegularity
+public import ForMathlib.NS.Tether
+public import NS_Millennium_Proof.Modules.NS_Equations
+public import NS_Millennium_Proof.Modules.ArnoldGeometric
+public import NS_Millennium_Proof.Modules.SymplecticTether
+public import NS_Millennium_Proof.Modules.TetheredLyapunov
+public import NS_Millennium_Proof.Modules.GlobalRegularity
 
--- Re-export for convenience
-export SymplecticTether (TetheredBracket TetherKernel)
-export GlobalRegularity (frohmanian_symplectic_tether_theorem)
+-- The bracket lives in `FrohmanianTether`. The theorem in this library is
+-- `frohmanian_tether_theorem`, not `frohmanian_symplectic_tether_theorem`.
+export FrohmanianTether (TetheredBracket TetherKernel)
+export GlobalRegularity (frohmanian_tether_theorem)

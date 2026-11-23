@@ -1,0 +1,54 @@
+name: Kernel certificate
+
+# Builds the lake libraries and fails if the built sources contain sorry,
+# admit, native_decide, or an axiom declaration. historical/, docs/, and the
+# top-level Modules/ mirror are not lake roots and are not this certificate.
+# A green run is not a Clay solution.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  kernel-certificate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install elan
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- -y --default-toolchain none
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+
+      - name: Toolchain
+        run: |
+          mkdir -p cert-out
+          echo "commit: $(git rev-parse HEAD)" | tee cert-out/environment.txt
+          echo "lean-toolchain: $(cat lean-toolchain)" | tee -a cert-out/environment.txt
+          lake --version | tee -a cert-out/environment.txt
+          lean --version | tee -a cert-out/environment.txt
+
+      - name: Mathlib cache
+        run: lake exe cache get || true
+
+      - name: lake build
+        run: |
+          set -o pipefail
+          lake build 2>&1 | tee cert-out/build.log
+
+      - name: sorry / admit / native_decide / axiom scan
+        run: |
+          set -o pipefail
+          python3 scripts/sorry_scan.py NS_Millennium_Proof.lean NS_Millennium_Proof ForMathlib | tee cert-out/sorry-scan.txt
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-certificate
+          path: cert-out/

@@ -22,6 +22,12 @@ require mathlib from git "https://github.com/leanprover-community/mathlib4.git" 
 lean_lib NS_Millennium_Proof where
   roots := #[`NS_Millennium_Proof]
   globs := #[.submodules `NS_Millennium_Proof]
+
+-- The file on disk is ForMathlib/NS/Tether.lean. The root used to import
+-- NS_Millennium_Proof.ForMathlib.NS.Tether, which is not a path in this tree.
+lean_lib ForMathlib where
+  roots := #[`ForMathlib]
+  globs := #[.submodules `ForMathlib]
   -- The library uses Lean's module system (§5 of the Language Reference).
   -- Individual .lean files are prefixed with `module` and use `public import` / `public meta import`
   -- to control public API vs private implementation and meta-phase code (widgets, tactics).

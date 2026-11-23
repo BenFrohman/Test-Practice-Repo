@@ -6,7 +6,7 @@
 
 Formalization in Lean 4 of the global regularity for the 3D incompressible Navier–Stokes equations using the Frohmanian Symplectic Tether framework.
 
-**Status:** Build clean. Geometric core complete. Remaining `sorry` placeholders in analytic estimates.
+**Status:** Not certified. The lake roots are `NS_Millennium_Proof` and `ForMathlib`. The kernel-certificate workflow builds those roots and fails while `sorry`, `admit`, `native_decide`, or an `axiom` declaration remains in them. `historical/`, `docs/`, and the top-level `Modules/` mirror are not part of that scan. A green run would not be a Clay solution.
 
 ## Structure
 - `ForMathlib/NS/Tether.lean`: Upstream-candidate geometric kernel.
