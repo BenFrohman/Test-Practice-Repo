@@ -1,7 +1,7 @@
 <!-- Copyright (c) 2026 Benjamin Stanley Frohman. Licensed under Apache-2.0. -->
 # Archived Lean snapshots
 
-These `.lean` files were outside the lake libraries and were never compiled by CI. Every tracked `.lean` file is now compiled, with no exclusions, so each snapshot that could not compile in this tree, or that contained `sorry`/`axiom`, was replaced by a short note. The original text is preserved verbatim in git at commit `b4001a7` (`git show b4001a7:<path>`); the sha256 below is of that original text.
+These `.lean` files were replaced by a short note so that every tracked `.lean` file compiles, with no exclusions. Most were outside the lake libraries and were never compiled by CI. `NS_Millennium_Proof/Skeleton/PaperOverview.lean` was a lake target; its six `sorry` were hidden from the kernel by an unclosed `/-!` comment (a `-!/` typo, later balanced by an auto-closed `-/`). The original text of each file is preserved verbatim in git at commit `b4001a7` (`git show b4001a7:<path>`); the sha256 below is of that original text.
 
 | path | sha256 of original (b4001a7) | sorry/axiom outside comments | now |
 |---|---|---|---|
@@ -14,6 +14,7 @@ These `.lean` files were outside the lake libraries and were never compiled by C
 | `Modules/SymplecticTether.lean` | `bdf9a43884bb0217ef3f7bdd7a669495f50eb965de4087834b54e1d5ad135cf0` | 4 | replaced by a note |
 | `Modules/TetheredLyapunov.lean` | `979318ee07947c05a22b3e4f314ffc8a5d5eef88c0e7d1801929ae259c7a24e1` | 5 | replaced by a note |
 | `docs/Clarified_Degeneracy_and_Majorant_Blocks.lean` | `847d2f78dbd93022a7e5f1ee594e6328fb0e2a3d14ed98ea9bce00ddd3fc896b` | 18 | replaced by a note |
+| `NS_Millennium_Proof/Skeleton/PaperOverview.lean` | `7ab1a115d6665cbe5ab31c136e99a75e79935002ab483cf9dea2269496719720` | 6 (hidden by an unclosed comment) | replaced by a note |
 | `historical/MathPort_Header_Template.lean` | `e537b6804b1afb7c4f264cff3189b0d27fb4dc5e16a2e09a0f3dd7adbf21c531` | 0 | kept unchanged |
 | `historical/docs/proof_evolution/PaperSkeleton.lean` | `55b914777e7b5916d13ea0f1929d376249cd6dd1c485169b92633a97c9124fe8` | 0 | replaced by a note |
 | `historical/previous_implementations/PaperFormalization.lean` | `7254a715c77596d4ebda37dd3443b03814351661ddecb38a0969844b01c74649` | 3 | replaced by a note |

@@ -64,9 +64,10 @@ noncomputable def Pi_u (μ : Measure X) (u v : X → E) : X → E :=
 theorem Pi_u_self (μ : Measure X) (u : X → E) (h : ∫ y, ‖u y‖ ^ 2 ∂μ ≠ 0) :
     Pi_u μ u u = 0 := by
   funext x
-  have : (∫ y, ⟪u y, u y⟫ ∂μ) = ∫ y, ‖u y‖ ^ 2 ∂μ := by
+  unfold Pi_u
+  have hnorm : (∫ y, ⟪u y, u y⟫ ∂μ) = ∫ y, ‖u y‖ ^ 2 ∂μ := by
     congr 1; funext y; exact real_inner_self_eq_norm_sq (u y)
-  simp [Pi_u, div_self h]
+  rw [hnorm, div_self h, one_smul, sub_self]
 
 /-- `L²(μ)` orthogonality of `Π_u v` to `u`. -/
 theorem integral_inner_Pi_u (μ : Measure X) (u v : X → E)
@@ -76,7 +77,8 @@ theorem integral_inner_Pi_u (μ : Measure X) (u v : X → E)
   set c := (∫ y, ⟪v y, u y⟫ ∂μ) / (∫ y, ‖u y‖ ^ 2 ∂μ)
   have hpt : (fun x => ⟪Pi_u μ u v x, u x⟫) = fun x => ⟪v x, u x⟫ - c * ‖u x‖ ^ 2 := by
     funext x
-    simp only [Pi_u, inner_sub_left, real_inner_smul_left, real_inner_self_eq_norm_sq]
+    unfold Pi_u
+    rw [inner_sub_left, real_inner_smul_left, real_inner_self_eq_norm_sq]
     rfl
   rw [hpt, integral_sub hvu (hu.const_mul c), integral_const_mul]
   simp only [c]

@@ -72,7 +72,11 @@ generates Euler; the tethered differential inequality itself (it enters only as 
   and every module under `NS_Millennium_Proof/`) and `ForMathlib`.
 * `Modules/`, `docs/` and `historical/` hold archived snapshots. They were never compiled; each
   one that could not compile or contained `sorry`/`axiom` is now a short note, and its original
-  text is in git at commit `b4001a7` (see `historical/ARCHIVED_LEAN_SNAPSHOTS.md`).
+  text is in git at commit `b4001a7` (see `historical/ARCHIVED_LEAN_SNAPSHOTS.md`). The lake
+  target `NS_Millennium_Proof/Skeleton/PaperOverview.lean` is archived the same way: it contained
+  six `sorry` hidden by an unclosed comment, which is not a proof. `Skeleton/UniquenessOverview.lean`
+  is a short orientation note matching the kernel (the minimal-tether uniqueness claim is false;
+  solution uniqueness is hypothesis (U)).
 * CI: `.github/workflows/kernel-certificate.yml` (no-skip guard, full build-log scan,
   build-every-file, `sorry`/axiom scan of every tracked `.lean` file, `#print axioms` audit).
   The same checks run locally with `scripts/verify_millennium_complex_calcs.sh`.
